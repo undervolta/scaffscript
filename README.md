@@ -13,7 +13,7 @@ A simple tool for creating module-based GameMaker source codes before they are w
 
 ## Usage
 
-Use `*.v.gml` files to mark a file as a Vortex file.
+Use `*.v.gml` files to mark a file as a Vortex file. Normal `*.gml` files are still supported, but they are not processed by Vortex.
 
 ### Export Module
 
@@ -176,22 +176,34 @@ my_method = function() {
 
 ### GameMaker Integration
 
-Use `intg` statement to mark this file as an integration target. The content of the file will be written to the actual GameMaker project.
+Use `intg` statement to mark this file as an integration target, and `pub` statement to mark a block of code as a write target. The content of the file will be written to the actual GameMaker project.
 
 ```js
 // my_file.v.gml
 
-intg "scripts/my_script"				// integrate to `scripts/my_script/my_script.gml`
+intg { Main, Other } to "scripts/my_script"				// integrate to `scripts/my_script/my_script.gml`
 
-show_debug_message("Hello, from my_script!");
+pub Main {
+	show_debug_message("Hello, from my_script!");
+}
+
+pub Other {
+	show_debug_message("Hello, from my_script (other)!");
+}
 ```
 
 ```js
 // my_other_file.v.gml
 
-intg "objects/my_object" event "create"	// integrate to `objects/my_object/Create_0.gml`
+intg * to "objects/my_object"	// integrate to `objects/my_object/*`
 
-show_debug_message("Hello, from my_object create event!");
+pub Main as "create" {			// integrate to `objects/my_object/Create_0.gml`
+	show_debug_message("Hello, from my_object create event!");
+}
+
+pub StepEvent {					// <event>Event is also supported
+	show_debug_message("Hello, from my_object step event!");
+}
 ```
 
 ### Configuration
