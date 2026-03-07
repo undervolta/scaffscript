@@ -1,4 +1,214 @@
-# vortex-gml
+# Vortex-GML
+
+A simple tool for creating module-based GameMaker source codes before they are written to the actual GameMaker project. 
+
+## Key Features
+
+- Unify multiple source files into a single source file.
+- TypeScript-like module system.
+- Flexible configuration options.
+- Dev-friendly CLI interface.
+- Auto-integrate the unified file(s) to the GameMaker project.
+- And more... (WIP)
+
+## Usage
+
+Use `*.v.gml` files to mark a file as a Vortex file.
+
+### Export Module
+
+1. Use `export` statement to export types (a variable, function, arrow function, class, interface, or type) from a Vortex file. You can also use `export * from` to export all types from another Vortex file.
+
+```js
+// my_file.v.gml
+
+export var my_var = 1;
+export let my_let = 2;						// `let` will be converted to `var`
+export const MY_CONST = "Hello, World!";	// `const` will be converted to `#macro`
+
+export function my_func() {
+	show_debug_message("Hello, World!");
+}
+
+// arrow function will be converted to method
+export const my_method = (name: string, age: number) => {
+	show_debug_message(`Hello, ${name}! You are ${age} years old.`);
+}
+
+export enum MY_ENUM {
+	A,
+	B,
+	C
+}
+
+// class will be converted to struct constructor
+export class MyClass {						
+	constructor(name: string, age: number)
+
+	name: string = "";
+	age: number = 0;
+
+	show_name() {
+		show_debug_message(this.name);
+	}
+}
+
+// interfaces and types will be converted to struct
+export interface MyInterface {
+	name: string;
+	age: number = 0;				// default value is allowed, which not allowed in TypeScript
+	isActive?: boolean;				// optional property is allowed
+}
+
+// interfaces can be extended
+export interface MyExtInterface extends MyInterface {
+	address: string;
+}
+
+export type MyType = {
+	name: string = "";				// default value is allowed, which not allowed in TypeScript
+	age: number;
+	isActive?: boolean;				// optional property is allowed
+}
+
+// types intersection is allowed
+export type MyIntersectedType = MyType & {
+	address: string;
+}
+```
+
+```js
+// index.v.gml
+
+export * from "my_file";			// export all types from "my_file"
+```
+
+2. Use `impl` statement to add implementation to a class.
+
+```js
+// my_file.v.gml
+
+export class MyClass {
+	constructor(name: string, age?: number)
+
+	name: string = "";
+	age: number = 0;
+}
+
+impl MyClass {
+	show_age() {
+		show_debug_message(age);
+	}
+}
+```
+
+```js
+// set.v.gml
+
+// implementation can be split into multiple files
+impl MyClass {
+	set_age(age: number) {
+		age = age;
+	}
+
+	// static method
+	static static_method = (name: string) => {
+		show_debug_message($"Hello, {name}!");
+	}
+}
+```
+
+### Import Module
+
+1. Use `include` statement to import a module from another Vortex file, and replace the import statement with the actual content of the exported types.
+
+```js
+// my_other_file.v.gml
+
+include { my_var, my_func, MyClass: Class } from "my_file";
+/**
+ * The generated source code will replace the import statement with the actual content of the exported types.
+ * 
+ * For example, the above import statement will be replaced with:
+	 * 	var my_var = 1;
+	 * 	function my_func() {}
+	 * 	function MyClass(name, age) constructor {
+	 * 		// ...
+	 *  }
+	 * 
+	 * And the rest of the code will be left as is.
+	 */
+
+show_debug_message(my_var);					// 1
+my_func();									// my_func
+var my_instance = new Class("John", 20);	// MyClass
+```
+
+2. Use `import` statement to import a module from another Vortex file, and then use `@<keyword>` statements to load and replace the content of a Vortex file to certain places in the code.
+
+| Keyword | Description | Example |
+| --- | --- | --- |
+| `@content` | Replace the statement with the actual content of the exported type. | `@content my_var` -> `var my_var = 1;` |
+| `@nameof` | Replace the statement with the **name** of the exported type. | `@nameof my_var` -> `"my_var"` |
+| `@typeof` | Replace the statement with the **type** of the exported type. | `@typeof my_var` -> `"number"` |
+| `@valueof` | Replace the statement with the **value** of the exported type. | `@valueof my_var` -> `1` |
+| `@use` | Replace the statement with the object shape of the exported type. Only works with `interface` or `type`. | `var obj = @use MyInterface { name: "John" }` -> `var obj = { name: "John", age: 0, isActive: false };` |
+
+```js
+// my_other_file.v.gml
+
+import * from "my_file";
+
+my_method = function() {
+	@content my_var;					// replace with `var my_var = 1;`
+	var hello = @valueof MY_CONST;		// replace with `var hello = "Hello, World!";`
+	var obj = @use MyInterface { 		// replace with `var obj = { name: "John", age: 0, isActive: false };`
+		name: "John" 
+	};
+	
+	show_debug_message(my_var);			// 1
+	show_debug_message(obj.name);		// John
+
+	var inst = new MyClass("John", 20);	
+	inst.show_age();					// 20
+}
+```
+
+### GameMaker Integration
+
+Use `intg` statement to mark this file as an integration target. The content of the file will be written to the actual GameMaker project.
+
+```js
+// my_file.v.gml
+
+intg "scripts/my_script"				// integrate to `scripts/my_script/my_script.gml`
+
+show_debug_message("Hello, from my_script!");
+```
+
+```js
+// my_other_file.v.gml
+
+intg "objects/my_object" event "create"	// integrate to `objects/my_object/Create_0.gml`
+
+show_debug_message("Hello, from my_object create event!");
+```
+
+### Configuration
+
+Create a `vortex.config.ts` file in the root of your project with the following content:
+
+```ts
+import type { VortexConfig } from "vortex-gml";
+
+const config: Partial<VortexConfig> = {
+	// your config here
+};
+
+export default config;
+```
+
+## Installation
 
 To install dependencies:
 
@@ -9,7 +219,5 @@ bun install
 To run:
 
 ```bash
-bun run index.ts
+bun run vortex <target_path>		# target_path = `src/` by default
 ```
-
-This project was created using `bun init` in bun v1.3.3. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.

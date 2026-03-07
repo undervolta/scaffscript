@@ -1,8 +1,12 @@
-import { resolvePath } from "./utils/path";
+#!/usr/bin/env bun
 
-console.log("Hello via Bun!");
+import { resolvePath } from "./utils";
+import { getPath } from "./fs";
 
-const file = Bun.file(resolvePath("../test/test.gml"));
+
+console.log(getPath());
+
+const file = Bun.file(resolvePath("tests/test.gml"));
 const content = await file.text();
 console.log(content);
 

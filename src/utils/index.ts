@@ -1,3 +1,3 @@
-import * as pathUtils from "./path";
-
-export { pathUtils };
+export * from "./path";
+export * from "./log";
+export * from "./fs";
