@@ -12,6 +12,7 @@ export async function readAndSplitFiles(files: VortexFile[], config: VortexConfi
 		vortex: [],
 		normal: []
 	};
+	const indexes: VortexFile[] = [];
 
 	const intgRegex = /intg (\{[A-Za-z0-9,*\s]+\}|[A-Za-z0-9,*]+) to/;
 	const implRegex = /impl [A-Za-z0-9]+ {/;
@@ -24,9 +25,25 @@ export async function readAndSplitFiles(files: VortexFile[], config: VortexConfi
 		file.toGenerate = intgRegex.test(file.content);
 
 		file.name = file.name.replace(".v.gml", "");
-		if (file.isIndex)
-			file.name = "";
 
+		// set entries (index files) to always be the last files to be processed
+		if (file.isIndex) {
+			file.name = "";
+			indexes.push(file);
+			continue;
+		}
+
+		if (implRegex.test(file.content))
+			implFiles.push(file);
+		else if (file.isVortex && file.toGenerate) 
+			res.generate.push(file);
+		else if (file.isVortex) 
+			res.vortex.push(file);
+		else 
+			res.normal.push(file);
+	}
+
+	for (const file of indexes) {
 		if (implRegex.test(file.content))
 			implFiles.push(file);
 		else if (file.isVortex && file.toGenerate) 
@@ -58,6 +75,6 @@ export async function readAndSplitFiles(files: VortexFile[], config: VortexConfi
 			log.warn(`Class \x1b[33m${className}\x1b[0m not found for file ${file.name}. Skipping this file...`);
 		}
 	}
-
+	
 	return res;
 }

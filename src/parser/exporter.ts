@@ -43,12 +43,13 @@ function getDefaultValue(type: "any" | "string" | "number" | "boolean" | "object
 function getObjectMembers(module: VortexModule, retryList: VortexModuleRetry[], filePath: string, name: string, objCode: string, isType: boolean = false) {
 	const deleteCommentRegex = /\/\/[^\n]*|\/\*[\s\S]*?\*\//g;
 	const cleanObjCode = objCode.replace(deleteCommentRegex, "").replace(/\s+/g, "");
-	
 	const shapes = isType ? cleanObjCode.split('=')[1]!.trim() : null;
 	const members = cleanObjCode.split('{')[1]!.replace("}", "").split(',');
-	const memberNames: string[] = [];
-	const memberTypes: ("any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum")[] = [];
-	const memberValues: any[] = [];
+
+	const memberObj: Record<string, {
+		type: "any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum";
+		value: any;
+	}> = {};
 	
 	if (objCode.includes("extends")) {
 		const extendsMatch = objCode.match(/extends (\w+)/);
@@ -64,9 +65,9 @@ function getObjectMembers(module: VortexModule, retryList: VortexModuleRetry[], 
 			else {
 				const extendsInterface = module[filePath][extendsName] as VortexModuleInterface;
 				
-				extendsInterface.memberNames.forEach(m => memberNames.push(m));
-				extendsInterface.memberTypes.forEach(t => memberTypes.push(t));
-				extendsInterface.memberValues.forEach(v => memberValues.push(v));
+				for (const [mName, m] of Object.entries(extendsInterface.member)) {
+					memberObj[mName] = { type: m.type, value: m.value };
+				}
 			} 
 		}
 	} else if (isType && objCode.includes("&")) {
@@ -84,9 +85,9 @@ function getObjectMembers(module: VortexModule, retryList: VortexModuleRetry[], 
 			else {
 				const extendsType = module[filePath][and] as VortexModuleType;
 				
-				extendsType.memberNames.forEach(m => memberNames.push(m));
-				extendsType.memberTypes.forEach(t => memberTypes.push(t));
-				extendsType.memberValues.forEach(v => memberValues.push(v));
+				for (const [mName, m] of Object.entries(extendsType.member)) {
+					memberObj[mName] = { type: m.type, value: m.value };
+				}
 			}
 		}
 	}
@@ -101,22 +102,10 @@ function getObjectMembers(module: VortexModule, retryList: VortexModuleRetry[], 
 			? (parts[0]!.endsWith('?') ? 'undefined' : getDefaultValue(inferInlineType(partFirst)))
 			: defParts[1]!.trim();
 
-		if (!memberNames.includes(memName)) {
-			memberNames.push(memName);
-			memberTypes.push(parts.length === 1 ? "any" : inferInlineType(partFirst));
-			memberValues.push(defValue);
-		} else {
-			const idx = memberNames.indexOf(memName);
-			memberTypes[idx] = parts.length === 1 ? "any" : inferInlineType(partFirst);
-			memberValues[idx] = defValue;
-		}
+		memberObj[memName] = { type: parts.length === 1 ? "any" : inferInlineType(partFirst), value: defValue };
 	} 
 
-	return {
-		memberNames,
-		memberTypes,
-		memberValues
-	};
+	return memberObj;
 }
 
 function countBraces(line: string): number {
@@ -290,10 +279,10 @@ export function getExportedModules(files: VortexFileGroup) {
 					if (!module[filePath]) 
 						module[filePath] = {};
 
-					const { memberNames, memberTypes, memberValues } = getObjectMembers(module, retryList, filePath, name, interfaceCode);
+					const member = getObjectMembers(module, retryList, filePath, name, interfaceCode);
 					const parsedStr = "{" + interfaceCode.split('{')[1]!.split('}')[0]! + "}";
 
-					module[filePath][name] = { name, value: interfaceCode.replace("export ", ""), type: 'interface', memberNames, memberTypes, memberValues, parsedStr };
+					module[filePath][name] = { name, value: interfaceCode.replace("export ", ""), type: 'interface', member, parsedStr };
 				}
 			} else if (line.startsWith('export enum ') || line.startsWith('export const enum ')) {
 				// Collect multiline enum
@@ -361,10 +350,10 @@ export function getExportedModules(files: VortexFileGroup) {
 					if (!module[filePath]) 
 						module[filePath] = {};
 
-					const { memberNames, memberTypes, memberValues } = getObjectMembers(module, retryList, filePath, name, typeCode, true);
+					const member = getObjectMembers(module, retryList, filePath, name, typeCode, true);
 					const parsedStr = "{" + typeCode.split('{')[1]!.split('}')[0]! + "}";
 
-					module[filePath][name] = { name, value: typeCode.replace("export ", ""), type: 'type', memberNames, memberTypes, memberValues, parsedStr };
+					module[filePath][name] = { name, value: typeCode.replace("export ", ""), type: 'type', member, parsedStr };
 				}
 			} else if (line.includes(' = ')) {
 				// Variable or arrow function
@@ -529,10 +518,8 @@ export function getExportedModules(files: VortexFileGroup) {
 				const currInterface = module[retry.filePath]![retry.name] as VortexModuleInterface;
 				const extendsInterface = module[retry.filePath]![retry.targetName] as VortexModuleInterface;
 
-				for (const [idx, member] of extendsInterface.memberNames.entries()) {
-					currInterface.memberNames.push(member);
-					currInterface.memberTypes.push(extendsInterface.memberTypes[idx]!);
-					currInterface.memberValues.push(extendsInterface.memberValues[idx]!);
+				for (const [mName, m] of Object.entries(extendsInterface.member)) {
+					currInterface.member[mName] = { type: m.type, value: m.value };
 				}
 				break;
 
@@ -540,10 +527,8 @@ export function getExportedModules(files: VortexFileGroup) {
 				const currType = module[retry.filePath]![retry.name] as VortexModuleType;
 				const extendsType = module[retry.filePath]![retry.targetName] as VortexModuleType;
 
-				for (const [idx, member] of extendsType.memberNames.entries()) {
-					currType.memberNames.push(member);
-					currType.memberTypes.push(extendsType.memberTypes[idx]!);
-					currType.memberValues.push(extendsType.memberValues[idx]!);
+				for (const [mName, m] of Object.entries(extendsType.member)) {
+					currType.member[mName] = { type: m.type, value: m.value };
 				}
 				break;
 		}

@@ -15,9 +15,9 @@ describe("Transform Vortex files", async () => {
 		// res.vortex[1]!.childs[0]!.childs.push(res.vortex[0]!);
 		// res.vortex[1]!.childs[0]!.childs.push(res.vortex[0]!);
 
-		// console.log(`Generate files: ${JSON.stringify(res.generate, null, 2)}`);
-		// console.log(`Vortex files: ${JSON.stringify(res.vortex, null, 2)}`);
-		// console.log(`Normal files: ${JSON.stringify(res.normal, null, 2)}`);
+		// console.log(`Generate files: ${JSON.stringify(res?.generate, null, 2)}`);
+		// console.log(`Vortex files: ${JSON.stringify(res?.vortex, null, 2)}`);
+		// console.log(`Normal files: ${JSON.stringify(res?.normal, null, 2)}`);
 
 		const nestedChilds: number[] = [];
 

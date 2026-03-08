@@ -67,16 +67,22 @@ export type VortexModuleFunction = {
 } & VortexModuleT;
 
 export type VortexModuleInterface = {
-	memberNames: string[];
-	memberTypes: ("any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum")[];
-	memberValues: any[];		// for default value
+	member: {
+		[name: string]: {
+			type: "any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum";
+			value: any;
+		}
+	};
 	parsedStr: string;
 } & VortexModuleT;
 
 export type VortexModuleType = {
-	memberNames: string[];
-	memberTypes: ("any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum")[];
-	memberValues: any[];		// for default value
+	member: {
+		[name: string]: {
+			type: "any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum";
+			value: any;
+		}
+	};
 	parsedStr: string;
 } & VortexModuleT;
 
