@@ -1,14 +1,17 @@
 # Vortex-GML
 
-A simple tool for creating module-based GameMaker source codes before they are written to the actual GameMaker project. 
+A superset language of **GameMaker Language** (GML) for creating module-based GameMaker source codes. This language is mainly used for developing GML libraries, but can also be used for other purposes.
+
+> [!WARNING]
+> This project is still in early development. The syntax and features are subject to change. Use at your own risk.
 
 ## Key Features
 
 - Unify multiple source files into a single source file.
-- TypeScript-like module system.
+- TypeScript-like syntax and module system.
 - Flexible configuration options.
 - Dev-friendly CLI interface.
-- Auto-integrate the unified file(s) to the GameMaker project.
+- Togglable integration (auto/manual) to your GameMaker project.
 - And more... (WIP)
 
 ## Usage
@@ -17,7 +20,7 @@ Use `*.v.gml` files to mark a file as a Vortex file. Normal `*.gml` files are st
 
 ### Export Module
 
-1. Use `export` statement to export types (a variable, function, arrow function, class, interface, or type) from a Vortex file. You can also use `export * from` to export all types from another Vortex file.
+1. Use `export` statement to export types (a variable, function, class, interface, type, enum, or arrow function) from a Vortex file. You can also use `export * from` to export all types from another Vortex file.
 
 ```js
 // my_file.v.gml
@@ -150,9 +153,21 @@ var my_instance = new Class("John", 20);	// MyClass
 | --- | --- | --- |
 | `@content` | Replace the statement with the actual content of the exported type. | `@content my_var` -> `var my_var = 1;` |
 | `@nameof` | Replace the statement with the **name** of the exported type. | `@nameof my_var` -> `"my_var"` |
+| `@valueof` or `@:` | Replace the statement with the **value** of the exported type. | `@valueof my_var` -> `1`, `@:my_var` -> `1` |
 | `@typeof` | Replace the statement with the **type** of the exported type. | `@typeof my_var` -> `"number"` |
-| `@valueof` | Replace the statement with the **value** of the exported type. | `@valueof my_var` -> `1` |
 | `@use` | Replace the statement with the object shape of the exported type. Only works with `interface` or `type`. | `var obj = @use MyInterface { name: "John" }` -> `var obj = { name: "John", age: 0, isActive: false };` |
+
+```js
+// my_import.v.gml
+
+import { my_var } from "my_file";
+
+show_debug_message(@valueof my_var);	// 1
+show_debug_message(@:my_var);			// 1
+show_debug_message(@typeof my_var);		// "number"
+show_debug_message(@nameof my_var);		// "my_var"
+show_debug_message(@content my_var);	// var my_var = 1;
+```
 
 ```js
 // my_other_file.v.gml
@@ -181,14 +196,14 @@ Use `intg` statement to mark this file as an integration target, and `pub` state
 ```js
 // my_file.v.gml
 
-intg { Main, Other } to "scripts/my_script"				// integrate to `scripts/my_script/my_script.gml`
+intg { main, some_mod } to "scripts/my_script"				// integrate to `scripts/my_script/my_script.gml`
 
-pub Main {
+pub main {
 	show_debug_message("Hello, from my_script!");
 }
 
-pub Other {
-	show_debug_message("Hello, from my_script (other)!");
+pub some_mod {
+	show_debug_message("Hello, from my_script (some_mod)!");
 }
 ```
 
@@ -197,7 +212,7 @@ pub Other {
 
 intg * to "objects/my_object"	// integrate to `objects/my_object/*`
 
-pub Main as "create" {			// integrate to `objects/my_object/Create_0.gml`
+pub main as "create" {			// integrate to `objects/my_object/Create_0.gml`
 	show_debug_message("Hello, from my_object create event!");
 }
 

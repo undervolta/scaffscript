@@ -1,6 +1,6 @@
 import { expect, test, describe } from "bun:test";
 
-import { getPath, getVortexFiles } from "@/fs";
+import { getPath, getVortexFiles, getVortexConfig } from "@/fs";
 import { readAndSplitFiles } from "@/fs/grouping";
 import { getExportedModules } from "@/parser/exporter";
 import type { VortexFile } from "@types";
@@ -8,8 +8,9 @@ import type { VortexFile } from "@types";
 
 describe("Transform Vortex files", async () => {
 	test("Read and split files", async () => {
+		const config = await getVortexConfig();
 		const files = await getVortexFiles(getPath());
-		const res = await readAndSplitFiles(files);
+		const res = await readAndSplitFiles(files, config);
 
 		// res.vortex[1]!.childs[0]!.childs.push(res.vortex[0]!);
 		// res.vortex[1]!.childs[0]!.childs.push(res.vortex[0]!);
@@ -31,6 +32,9 @@ describe("Transform Vortex files", async () => {
 		}
 
 		//console.log(`${getChildCount(res.generate, true)}, ${getChildCount(res.vortex, true)}, ${res.normal.length}`)
+		expect(res).toBeDefined();
+
+		if (!res) return;
 		
 		expect(
 			getChildCount(res.generate, true) + 

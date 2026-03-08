@@ -1,4 +1,4 @@
-import type { VortexFile, VortexFileGroup } from "@types";
+import type { VortexConfig, VortexFile, VortexFileGroup } from "@types";
 import { log } from "@/utils";
 
 /**
@@ -6,7 +6,7 @@ import { log } from "@/utils";
  * @param files Array of VortexFile
  * @returns Object with `vortex`, `generate`, and `normal` properties, each containing an array of files
  */
-export async function readAndSplitFiles(files: VortexFile[]) {
+export async function readAndSplitFiles(files: VortexFile[], config: VortexConfig) {
 	const res: VortexFileGroup = {
 		generate: [],
 		vortex: [],
@@ -22,6 +22,10 @@ export async function readAndSplitFiles(files: VortexFile[]) {
 
 		file.content = (await fileHandle.text()).replace(/\r\n/g, "\n");
 		file.toGenerate = intgRegex.test(file.content);
+
+		file.name = file.name.replace(".v.gml", "");
+		if (file.isIndex)
+			file.name = "";
 
 		if (implRegex.test(file.content))
 			implFiles.push(file);
@@ -45,8 +49,14 @@ export async function readAndSplitFiles(files: VortexFile[]) {
 
 		if (classFile) 
 			classFile.childs.push(file);
-		else
+		else {
+			if (config.onNotFound === "error") {
+				log.error(`Class \x1b[33m${className}\x1b[0m not found for file ${file.name}. Aborting...`);
+				return null;
+			}
+
 			log.warn(`Class \x1b[33m${className}\x1b[0m not found for file ${file.name}. Skipping this file...`);
+		}
 	}
 
 	return res;

@@ -59,6 +59,7 @@ export async function getVortexFiles(path: string): Promise<VortexFile[]> {
 				name: file.name,
 				path: normalizePath(resolvePath(file.parentPath)),
 				isVortex: file.name.endsWith(".v.gml"),
+				isIndex: file.name === "index.v.gml",
 				toGenerate: false,
 				content: "",
 				childs: []
@@ -77,6 +78,7 @@ export async function getVortexConfig(): Promise<VortexConfig> {
 		acceptAllIntegration: false,
 		noBackup: false,
 		noIntegration: false,
+		onNotFound: "error",
 		production: false
 	};
 
@@ -86,6 +88,7 @@ export async function getVortexConfig(): Promise<VortexConfig> {
 		acceptAllIntegration: conf.acceptAllIntegration ?? false,
 		noBackup: conf.noBackup ?? false,
 		noIntegration: conf.noIntegration ?? false,
+		onNotFound: conf.onNotFound ?? "error",
 		production: conf.production ?? false
 	};
 }

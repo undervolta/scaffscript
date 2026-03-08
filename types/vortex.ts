@@ -2,6 +2,7 @@ export type VortexConfig = {
 	acceptAllIntegration: boolean;
 	noBackup: boolean;
 	noIntegration: boolean;
+	onNotFound: "error" | "ignore";
 	production: boolean;
 };
 
@@ -9,6 +10,7 @@ export type VortexFile = {
 	name: string;
 	path: string;
 	isVortex: boolean;
+	isIndex: boolean;
 	toGenerate: boolean;
 	content: string;
 	childs: VortexFile[]; 	// for files with `impl` statement
@@ -21,21 +23,69 @@ export type VortexFileGroup = {
 };
 
 export type VortexModule = {
-	arrowFn: VortexModuleObject[];
-	class: VortexModuleObject[];
-	const: VortexModuleObject[];
-	enum: VortexModuleObject[];
-	interface: VortexModuleObject[];
-	let: VortexModuleObject[];
-	function: VortexModuleObject[];
-	type: VortexModuleObject[];
-	var: VortexModuleObject[];
+	[filePathName: string]: {
+		[exportName: string]:
+			| VortexModuleConst
+			| VortexModuleFunction
+			| VortexModuleInterface
+			| VortexModuleType
+			| VortexModuleVar
+			| VortexModuleDefault;
+	}
+}
+
+/*export type VortexModule = {
+	arrowFn: VortexModuleFunction[];
+	class: VortexModuleTDefault[];
+	const: VortexModuleConst;
+	enum: VortexModuleTDefault[];
+	interface: VortexModuleTDefault[];
+	let: VortexModuleTDefault;
+	function: VortexModuleTDefault[];
+	type: VortexModuleTDefault[];
+	var: VortexModuleTDefault;
+};*/
+
+export type VortexModuleT = {
+	name: string;
+	value: string;
+	type: string;		// "any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum"
 };
 
-export type VortexModuleObject = {
-	[name: string]: {
-		name: string;		// the header name if it's a function, arrow function, or class
-		value: string;
-		type: string;		// "any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum";
-	};
+export type VortexModuleDefault = {
+	parsedStr: string;
+} & VortexModuleT;
+
+export type VortexModuleConst = {
+	parsedStr: string;
+} & VortexModuleT;
+
+export type VortexModuleFunction = {
+	header: string;
+	blockValue: string;
+	parsedStr: string;
+} & VortexModuleT;
+
+export type VortexModuleInterface = {
+	memberNames: string[];
+	memberTypes: ("any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum")[];
+	memberValues: any[];		// for default value
+	parsedStr: string;
+} & VortexModuleT;
+
+export type VortexModuleType = {
+	memberNames: string[];
+	memberTypes: ("any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum")[];
+	memberValues: any[];		// for default value
+	parsedStr: string;
+} & VortexModuleT;
+
+export type VortexModuleVar = {
+	parsedStr: string;
+} & VortexModuleT;
+
+export type VortexModuleRetry = { 
+	filePath: string, 
+	name: string, 
+	targetName: string
 };
