@@ -1,0 +1,94 @@
+import { expect, test, describe, onTestFinished } from "bun:test";
+
+import { 
+	// tabRegex, countSubstring,
+	parseHeader,
+	getTabLevels 
+} from "@/parser";
+
+describe("Regex tests", () => {
+	test("Implementation regex", () => {
+		const input = [
+			"impl MyClass {",
+			"\tshow_age() {",
+			"\t\tshow_debug_message(age);",
+			"\t}",
+			"",
+			"\tset_age(age?) {",
+			"\t\tage = age;",
+			"\t}",
+			"}",
+			"",
+			"impl MyOtherClass {",
+			"\tshow_name(name?) {",
+			"\t\tshow_debug_message(name);",
+			"\t}",
+			"}"
+		].join("\n");
+
+		const impl = parseHeader(input);
+
+		expect(impl.length).toBe(2);
+		expect(impl[0]?.name).toBe("MyClass");
+		expect(impl[0]?.body.trim()).toBe([
+			"show_age() {",
+			"\t\tshow_debug_message(age);",
+			"\t}",
+			"",
+			"\tset_age(age?) {",
+			"\t\tage = age;",
+			"\t}"
+		].join("\n"));
+		expect(impl[1]?.name).toBe("MyOtherClass");
+		expect(impl[1]?.body.trim()).toBe([
+			"show_name(name?) {",
+			"\t\tshow_debug_message(name);",
+			"\t}"
+		].join("\n"));
+
+		onTestFinished(() => {
+			console.log(`Match: ${JSON.stringify(impl, null, 2)}`);
+		});
+	});
+
+	test("Tab regex", () => {
+		const input1T = `function test() {
+	if (true) {
+		show_debug_message("Hello, World!");
+	}
+}`;
+		const input2S = `function test() {
+  if (true) {
+    show_debug_message("Hello, World!");
+  }
+}`;
+		const input4S = `function test() {
+    if (true) {
+        show_debug_message("Hello, World!");
+    }
+}`;
+
+		//const match1T = [...input1T.matchAll(tabRegex.oneTab)].reduce((acc: number[], tabs) => {
+		//	acc.push(countSubstring(tabs[0]!, '\t'));
+		//	return acc;
+		//}, []);
+
+		const match1T = getTabLevels(input1T, "1t");
+		const match2S = getTabLevels(input2S, "2s");
+		const match4S = getTabLevels(input4S, "4s");
+
+		expect(match1T).toEqual([0, 1, 2, 1, 0]);
+		expect(match2S).toEqual([0, 1, 2, 1, 0]);
+		expect(match4S).toEqual([0, 1, 2, 1, 0]);
+
+		onTestFinished(() => {
+			console.log(`Match 1T: ${match1T}`);
+			console.log(`Match 2S: ${match2S}`);
+			console.log(`Match 4S: ${match4S}`);
+		});
+	});
+
+	test.skip("Import regex", () => {
+
+	});
+});

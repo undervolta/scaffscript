@@ -2,15 +2,20 @@ import { expect, test, describe } from "bun:test";
 
 import { getPath, getVortexFiles, getVortexConfig } from "@/fs";
 import { readAndSplitFiles } from "@/fs/grouping";
-import { getExportedModules } from "@/parser/exporter";
-import type { VortexFile } from "@types";
+import { getExportedModules, implementClass } from "@/parser";
+import type { VortexFile, VortexFileGroup, VortexModule } from "@types";
 
 
-describe("Transform Vortex files", async () => {
+describe("Process Vortex files", async () => {
+	// assume the config and files are valid (from test 1)
+	const config = await getVortexConfig();
+	const files = await getVortexFiles(getPath());
+
+	let res: VortexFileGroup | null = null;
+	let module: VortexModule | null = null;
+
 	test("Read and split files", async () => {
-		const config = await getVortexConfig();
-		const files = await getVortexFiles(getPath());
-		const res = await readAndSplitFiles(files, config);
+		res = await readAndSplitFiles(files, config);
 
 		// res.vortex[1]!.childs[0]!.childs.push(res.vortex[0]!);
 		// res.vortex[1]!.childs[0]!.childs.push(res.vortex[0]!);
@@ -31,7 +36,7 @@ describe("Transform Vortex files", async () => {
 			return count;
 		}
 
-		//console.log(`${getChildCount(res.generate, true)}, ${getChildCount(res.vortex, true)}, ${res.normal.length}`)
+		// console.log(`${getChildCount(res.generate, true)}, ${getChildCount(res.vortex, true)}, ${res.normal.length}`)
 		expect(res).toBeDefined();
 
 		if (!res) return;
@@ -41,8 +46,26 @@ describe("Transform Vortex files", async () => {
 			getChildCount(res.vortex, true) +
 			res.normal.length
 		).toBe(files.length /*+ 2*/);
+	});
 
-		const module = getExportedModules(res);
-		console.log(`Module: ${JSON.stringify(module, null, 2)}`);
+	test("Get modules", () => {
+		if (!res) return;
+
+		module = getExportedModules(res, config);
+
+		// console.log(`Module: ${JSON.stringify(module, null, 2)}`);
+		expect(res).toBeDefined();
+	});
+
+	test("Implement classes", () => {
+		if (!res) return;
+		if (!module) return;
+
+		const valid = implementClass(module, res, config);
+
+		// console.log(`Module: ${JSON.stringify(module, null, 2)}`);
+		// await Bun.write((`.out/testOut.gml`), module["C:/Backup/Project/vortex-gml/tests/scripts/script2"]!["MyClass"]!.parsedStr);
+
+		expect(valid).toBe(true);
 	});
 });

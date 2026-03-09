@@ -3,7 +3,7 @@ export var y = 2;
 export let z = 3;
 export const STRING = "string";
 
-export function test() {
+export function test(x?) {
 	show_debug_message($"test from file1, x = {x}, y = {y}, \"{");
 }
 

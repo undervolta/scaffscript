@@ -79,7 +79,8 @@ export async function getVortexConfig(): Promise<VortexConfig> {
 		noBackup: false,
 		noIntegration: false,
 		onNotFound: "error",
-		production: false
+		production: false,
+		tabType: "1t"
 	};
 
 	const conf = (await import(confPath)).default;
@@ -89,6 +90,7 @@ export async function getVortexConfig(): Promise<VortexConfig> {
 		noBackup: conf.noBackup ?? false,
 		noIntegration: conf.noIntegration ?? false,
 		onNotFound: conf.onNotFound ?? "error",
-		production: conf.production ?? false
+		production: conf.production ?? false,
+		tabType: conf.tabType ?? "1t"
 	};
 }

@@ -1,5 +1,6 @@
 import type { VortexConfig, VortexFile, VortexFileGroup } from "@types";
 import { log } from "@/utils";
+import { implRegex } from "@/parser/regex";
 
 /**
  * Group the given files into Vortex files, files to generate, and normal files, and read their contents
@@ -12,11 +13,10 @@ export async function readAndSplitFiles(files: VortexFile[], config: VortexConfi
 		vortex: [],
 		normal: []
 	};
-	const indexes: VortexFile[] = [];
-
+	
 	const intgRegex = /intg (\{[A-Za-z0-9,*\s]+\}|[A-Za-z0-9,*]+) to/;
-	const implRegex = /impl [A-Za-z0-9]+ {/;
 	const implFiles: VortexFile[] = [];
+	const indexes: VortexFile[] = [];
 
 	for (const file of files) {
 		const fileHandle = Bun.file(`${file.path}/${file.name}`);
@@ -33,7 +33,7 @@ export async function readAndSplitFiles(files: VortexFile[], config: VortexConfi
 			continue;
 		}
 
-		if (implRegex.test(file.content))
+		if (implRegex.test(file.content)) 
 			implFiles.push(file);
 		else if (file.isVortex && file.toGenerate) 
 			res.generate.push(file);

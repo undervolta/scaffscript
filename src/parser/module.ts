@@ -1,10 +1,16 @@
 import type { 
+	VortexConfig,
 	VortexFileGroup, 
 	VortexModule,
 	VortexModuleInterface,
 	VortexModuleType,
 	VortexModuleRetry
 } from "@types";
+
+import { log } from "@/utils";
+import { parseHeader } from "@/parser/class-implement";
+import { fnHeaderRegex, fnParamsRegex } from "@/parser/regex";
+
 
 function inferType(value: string): "any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum" {
 	value = value.trim();
@@ -108,6 +114,11 @@ function getObjectMembers(module: VortexModule, retryList: VortexModuleRetry[], 
 	return memberObj;
 }
 
+/**
+ * Count braces in code while ignoring quoted strings and line comments.
+ * @param line Line to count braces in
+ * @returns Number of braces in the line
+ */
 function countBraces(line: string): number {
 	let count = 0;
 	let inString = false;
@@ -135,10 +146,45 @@ function countBraces(line: string): number {
 	return count;
 }
 
-function convertClassMethods(classBody: string): string {
-	// Convert method syntax to function expressions
-	// e.g., show_name() { ... } to show_name = function() { ... }
+/**
+ * Parse function parameters
+ * @param str String to parse
+ * @returns Object with function parameter names, defaults and combined
+ */
+export function parseFnParams(str: string) {
+	const match = str.match(fnParamsRegex);
+	let names: string[] = [];
+	let defaults: (string | null | undefined)[] = [];
+	let combined: string[] = [];
+
+	if (!match) return {
+		names,
+		defaults,
+		combined
+	};
+
+	const params = match[0]!.slice(1, -1).split(',');
+	names = params.map(p => p.trim().split('=')[0]!.trim());
+	defaults = params.map(p => {
+		const def = p.trim().split('=');
+		
+		return def.length > 1 
+			? def[1]?.trim()
+			: (def[0]?.trim().endsWith('?') ? 'undefined' : null)
+	});
+	combined = names.map((n, i) => (defaults[i]) ? (`${n.replaceAll('?', "")} = ${defaults[i]}`) : n.replaceAll('?', ""));
+
+	return { names, defaults, combined };
+}
+
+/**
+ * Convert class methods to function expressions
+ * @param classBody Class body to convert
+ * @returns Converted class body
+ */
+export function convertClassMethods(classBody: string): string {
 	const methodRegex = /(\w+)\s*\(([^)]*)\)\s*{([\s\S]*?)}/g;
+
 	return classBody.replace(methodRegex, (match, methodName, params, body) => {
 		// Avoid converting if it's part of a function expression like print = function() {
 		if (methodName === 'function') return match;
@@ -147,15 +193,33 @@ function convertClassMethods(classBody: string): string {
 }
 
 /**
+ * Insert tabs to the given string
+ * @param count Number of tabs to insert
+ * @param type Type of tab to insert
+ * @returns String with tabs inserted
+ */
+export function insertTabs(count: number, type: "1t" | "2s" | "4s") {
+	let str = "";
+
+	for (let i = 0; i < count; i++) {
+		str += type === "1t" ? '\t' : (type === "2s" ? '  ' : '    ');
+	}
+
+	return str;
+}
+
+/**
  * Get all exported modules from the given files
  * @param files Object with `vortex` and `generate` properties, each containing an array of files
  * @returns Object with all exported modules
  */
-export function getExportedModules(files: VortexFileGroup) {
+export function getExportedModules(files: VortexFileGroup, config: VortexConfig) {
 	const module: VortexModule = {};
 
-	if (files.generate.length == 0 && files.vortex.length == 0)
+	if (files.generate.length == 0 && files.vortex.length == 0) {
+		log.warn("No files to get exported modules from.");
 		return module;
+	}
 
 	const retryList: VortexModuleRetry[] = []; 
 
@@ -201,9 +265,10 @@ export function getExportedModules(files: VortexFileGroup) {
 					if (!module[filePath]) 
 						module[filePath] = {};
 
-					const parsedStr = funcCode.replace("export ", "");
-
-					module[filePath][name] = { name, value: parsedStr, type: 'function', parsedStr };
+					const params = parseFnParams(funcCode);
+					const parsedStr = funcCode.replace("export ", "").replace(fnParamsRegex, `(${params.combined.join(", ")})`);
+					
+					module[filePath][name] = { name, value: parseHeader(parsedStr, fnHeaderRegex)[0]!.body, type: 'function', parsedStr };
 				}
 			} else if (line.startsWith('export class ')) {
 				// Collect multiline class
@@ -249,7 +314,7 @@ export function getExportedModules(files: VortexFileGroup) {
 						}
 					}
 
-					const parsedStr = `function ${name}(${constructor.replaceAll("?", " = undefined")}) constructor {\n${classBody}\n}`;
+					const parsedStr = `function ${name}(${constructor.replaceAll("?", " = undefined")}) constructor {\n${insertTabs(1, config.tabType)}${classBody}\n}`;
 
 					module[filePath][name] = { name, value: classCode.replace("export ", ""), type: 'class', parsedStr };
 				}
@@ -387,41 +452,41 @@ export function getExportedModules(files: VortexFileGroup) {
 							const arrowCode = arrowLines.join('\n');
 							const arrowBlock = "{" + arrowCode.split('{')[1]!;
 
-							let header = decl.replace("export ", "");
+							/*let header = decl.replace("export ", "");
 
 							if (header.startsWith("const ")) 
 								header = header.replace("const ", "");
 							if (header.startsWith("let ")) 
 								header = header.replace("let ", "");
 							if (header.startsWith("var ")) 
-								header = header.replace("var ", "");
+								header = header.replace("var ", "");*/
+		
+							const params = parseFnParams(valuePart);
+							const parsedStr = `${name} = function(${params.combined.join(", ")}) ${arrowBlock}`;
 
-							const params = valuePart.split('=>')[0]!.trim().replaceAll("?", " = undefined");
-							const parsedStr = `${header.trim()} = function${params} ${arrowBlock}`;
-							
 							if (!module[filePath]) 
 								module[filePath] = {};
 
-							module[filePath][name] = { name, value: arrowCode.replace("export ", ""), type: 'method', header, blockValue: arrowBlock, parsedStr };
+							module[filePath][name] = { name, value: arrowBlock.slice(1, -1), type: 'method', /*header, blockValue: arrowBlock,*/ parsedStr };
 						} else {
 							// Single line arrow function
-							let header = decl.replace("export ", "");
+							/*let header = decl.replace("export ", "");
 
 							if (header.startsWith("const ")) 
 								header = header.replace("const ", "");
 							if (header.startsWith("let ")) 
 								header = header.replace("let ", "");
 							if (header.startsWith("var ")) 
-								header = header.replace("var ", "");
+								header = header.replace("var ", "");*/
 
-							const params = valuePart.split('=>')[0]!.trim().replaceAll("?", " = undefined");
+							const params = parseFnParams(valuePart);
 							const body = valuePart.split('=>')[1]!.trim();
-							const parsedStr = `${header.trim()} = function${params} { return ${body}; }`;
-							
+							const parsedStr = `${name} = function(${params.combined.join(", ")}) { return ${body}; }`;
+
 							if (!module[filePath]) 
 								module[filePath] = {};
 
-							module[filePath][name] = { name, value: line.replace("export ", ""), type: 'method', header, blockValue: body, parsedStr };
+							module[filePath][name] = { name, value: body, type: 'method', /*header, blockValue: body,*/ parsedStr };
 						}
 					} else if (valuePart.startsWith('function')) {
 						// Function expression
@@ -445,38 +510,40 @@ export function getExportedModules(files: VortexFileGroup) {
 							const funcCode = funcLines.join('\n');
 							const funcBlock = "{" + funcCode.split('{')[1]!;
 
-							let header = decl.replace("export ", "");
+							/*let header = decl.replace("export ", "");
 
 							if (header.startsWith("const ")) 
 								header = header.replace("const ", "");
 							if (header.startsWith("let ")) 
 								header = header.replace("let ", "");
 							if (header.startsWith("var ")) 
-								header = header.replace("var ", "");
+								header = header.replace("var ", "");*/
 
-							const parsedStr = `${header.trim()} = ${valuePart.replace(/{\s*$/, funcBlock)}`;
+							const params = parseFnParams(valuePart);
+							const parsedStr = `${name} = function(${params.combined.join(", ")}) ${funcBlock}`;
+							//const parsedStr = `${name} = ${valuePart.replace(/{\s*$/, funcBlock)}`;
 
 							if (!module[filePath]) 
 								module[filePath] = {};
 
-							module[filePath][name] = { name, value: funcCode.replace("export ", ""), type: 'method', header, blockValue: funcBlock, parsedStr };
+							module[filePath][name] = { name, value: funcBlock.slice(1, -1), type: 'method', /*header, blockValue: funcBlock,*/ parsedStr };
 						} else {
 							// Single line function expression (unlikely)
-							let header = decl.replace("export ", "");
+							/*let header = decl.replace("export ", "");
 
 							if (header.startsWith("const ")) 
 								header = header.replace("const ", "");
 							if (header.startsWith("let ")) 
 								header = header.replace("let ", "");
 							if (header.startsWith("var ")) 
-								header = header.replace("var ", "");
+								header = header.replace("var ", "");*/
 
-							const parsedStr = `${header.trim()} = ${valuePart}`;
+							const parsedStr = `${name} = ${valuePart}`;
 
 							if (!module[filePath]) 
 								module[filePath] = {};
 
-							module[filePath][name] = { name, value: line.replace("export ", ""), type: 'method', header, blockValue: valuePart, parsedStr };
+							module[filePath][name] = { name, value: line.replace("export ", ""), type: 'method', /*header, blockValue: valuePart,*/ parsedStr };
 						}
 					} else {
 						// Variable

@@ -4,6 +4,7 @@ export type VortexConfig = {
 	noIntegration: boolean;
 	onNotFound: "error" | "ignore";
 	production: boolean;
+	tabType: "1t" | "2s" | "4s";
 };
 
 export type VortexFile = {
@@ -33,18 +34,6 @@ export type VortexModule = {
 			| VortexModuleDefault;
 	}
 }
-
-/*export type VortexModule = {
-	arrowFn: VortexModuleFunction[];
-	class: VortexModuleTDefault[];
-	const: VortexModuleConst;
-	enum: VortexModuleTDefault[];
-	interface: VortexModuleTDefault[];
-	let: VortexModuleTDefault;
-	function: VortexModuleTDefault[];
-	type: VortexModuleTDefault[];
-	var: VortexModuleTDefault;
-};*/
 
 export type VortexModuleT = {
 	name: string;

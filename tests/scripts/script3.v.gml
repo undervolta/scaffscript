@@ -1,9 +1,9 @@
 impl MyClass {
-	set_age(age: number) {
+	set_age(age) {
 		age = age;
 	}
 
-	static static_method = (name: string) => {
-		show_debug_message($"Hello, {name}!");
+	static const static_method = (name?) => {
+		show_debug_message($"Hello, {name}! {");
 	}
 }
