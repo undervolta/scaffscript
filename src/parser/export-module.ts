@@ -1,7 +1,7 @@
 import type { 
 	VortexConfig,
 	VortexFileGroup, 
-	VortexModule,
+	VortexModuleStore,
 	VortexModuleInterface,
 	VortexModuleType,
 	VortexModuleRetry
@@ -46,7 +46,7 @@ function getDefaultValue(type: "any" | "string" | "number" | "boolean" | "object
 	}
 }
 
-function getObjectMembers(module: VortexModule, retryList: VortexModuleRetry[], filePath: string, name: string, objCode: string, isType: boolean = false) {
+function getObjectMembers(module: VortexModuleStore, retryList: VortexModuleRetry[], filePath: string, name: string, objCode: string, isType: boolean = false) {
 	const deleteCommentRegex = /\/\/[^\n]*|\/\*[\s\S]*?\*\//g;
 	const cleanObjCode = objCode.replace(deleteCommentRegex, "").replace(/\s+/g, "");
 	const shapes = isType ? cleanObjCode.split('=')[1]!.trim() : null;
@@ -214,7 +214,7 @@ export function insertTabs(count: number, type: "1t" | "2s" | "4s") {
  * @returns Object with all exported modules
  */
 export function getExportedModules(files: VortexFileGroup, config: VortexConfig) {
-	const module: VortexModule = {};
+	const module: VortexModuleStore = {};
 
 	if (files.generate.length == 0 && files.vortex.length == 0) {
 		log.warn("No files to get exported modules from.");
@@ -264,11 +264,13 @@ export function getExportedModules(files: VortexFileGroup, config: VortexConfig)
 
 					if (!module[filePath]) 
 						module[filePath] = {};
-
-					const params = parseFnParams(funcCode);
-					const parsedStr = funcCode.replace("export ", "").replace(fnParamsRegex, `(${params.combined.join(", ")})`);
 					
-					module[filePath][name] = { name, value: parseHeader(parsedStr, fnHeaderRegex)[0]!.body, type: 'function', parsedStr };
+					const body = funcCode.slice(funcCode.indexOf("{")).trim();
+					const params = parseFnParams(funcCode);
+					const parsedStr = `function ${name}(${params.combined.join(", ")}) ${body}`;
+						//funcCode.replace("export ", "").replace(fnParamsRegex, `(${params.combined.join(", ")})`);
+					
+					module[filePath][name] = { name, value: body.slice(1, -1), type: 'function', parsedStr };
 				}
 			} else if (line.startsWith('export class ')) {
 				// Collect multiline class
@@ -560,11 +562,12 @@ export function getExportedModules(files: VortexFileGroup, config: VortexConfig)
 
 						if (!module[filePath]) 
 							module[filePath] = {};
+
+						const parsedStr = (varType !== "const")
+							? (`${noVarKeyword ? '' : 'var '}${name} = ${valuePart};`)
+							: `#macro ${name} ${valuePart}`;
 						
-						if (varType !== "const")
-							module[filePath][varType] = { name, value: valuePart, type: valueType, parsedStr: `${noVarKeyword ? '' : 'var '}${name} = ${valuePart};` };
-						else
-							module[filePath][name] = { name, value: valuePart, type: valueType, parsedStr: `#macro ${name} ${valuePart}` };
+						module[filePath][name] = { name, value: valuePart, type: valueType, parsedStr };
 					}
 				}
 			}

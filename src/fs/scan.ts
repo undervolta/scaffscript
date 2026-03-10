@@ -14,7 +14,7 @@ const DEFAULT_PATH = resolvePath(conf.production ? "src" : "tests");
 export function getPath() {
 	return resolvePath(
 		process.argv[2] ?? 
-		prompt(`Path (default: ${DEFAULT_PATH}): `) ?? 
+		prompt(`\x1b[35m[INPUT]\x1b[0m  Scan path (default: ${DEFAULT_PATH}): `) ?? 
 		DEFAULT_PATH
 	);
 }

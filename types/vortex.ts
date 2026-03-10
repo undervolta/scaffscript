@@ -23,7 +23,7 @@ export type VortexFileGroup = {
 	normal: VortexFile[]
 };
 
-export type VortexModule = {
+export type VortexModuleStore = {
 	[filePathName: string]: {
 		[exportName: string]:
 			| VortexModuleConst
@@ -84,3 +84,21 @@ export type VortexModuleRetry = {
 	name: string, 
 	targetName: string
 };
+
+export type VortexModule = {
+	name: string, 
+	as: string; 
+	value: 
+		| VortexModuleConst
+		| VortexModuleFunction
+		| VortexModuleInterface
+		| VortexModuleType
+		| VortexModuleVar
+		| VortexModuleDefault;
+}
+
+export type VortexModuleUsage = {
+	cmd: "export" | "import" | "include" | null;
+	mods: VortexModule[] | null;
+	targetPath: string | null;
+} | null;

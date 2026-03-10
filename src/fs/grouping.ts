@@ -1,6 +1,6 @@
 import type { VortexConfig, VortexFile, VortexFileGroup } from "@types";
 import { log } from "@/utils";
-import { implRegex } from "@/parser/regex";
+import { implRegex, modControlRegex } from "@/parser/regex";
 
 /**
  * Group the given files into Vortex files, files to generate, and normal files, and read their contents
@@ -16,7 +16,8 @@ export async function readAndSplitFiles(files: VortexFile[], config: VortexConfi
 	
 	const intgRegex = /intg (\{[A-Za-z0-9,*\s]+\}|[A-Za-z0-9,*]+) to/;
 	const implFiles: VortexFile[] = [];
-	const indexes: VortexFile[] = [];
+	const exports: { file: VortexFile; depth: number }[] = [];
+	const indexes: { file: VortexFile; depth: number }[] = [];
 
 	for (const file of files) {
 		const fileHandle = Bun.file(`${file.path}/${file.name}`);
@@ -29,11 +30,15 @@ export async function readAndSplitFiles(files: VortexFile[], config: VortexConfi
 		// set entries (index files) to always be the last files to be processed
 		if (file.isIndex) {
 			file.name = "";
-			indexes.push(file);
+			indexes.push({ file, depth: file.path.split("/").filter(Boolean).length });
 			continue;
 		}
 
-		if (implRegex.test(file.content)) 
+		const matchExport = [...file.content.matchAll(modControlRegex)];
+		
+		if (matchExport.length)
+			exports.push({ file, depth: file.path.split("/").filter(Boolean).length });
+		else if (implRegex.test(file.content)) 
 			implFiles.push(file);
 		else if (file.isVortex && file.toGenerate) 
 			res.generate.push(file);
@@ -43,15 +48,26 @@ export async function readAndSplitFiles(files: VortexFile[], config: VortexConfi
 			res.normal.push(file);
 	}
 
-	for (const file of indexes) {
-		if (implRegex.test(file.content))
-			implFiles.push(file);
-		else if (file.isVortex && file.toGenerate) 
-			res.generate.push(file);
-		else if (file.isVortex) 
-			res.vortex.push(file);
-		else 
-			res.normal.push(file);
+	// sort based on depth (number of subdirectories)
+	exports.sort((a, b) => b.depth - a.depth);
+	indexes.sort((a, b) => b.depth - a.depth);
+
+	for (const fileHandle of exports) {
+		if (implRegex.test(fileHandle.file.content))
+			implFiles.push(fileHandle.file);
+		else if (fileHandle.file.isVortex && fileHandle.file.toGenerate) 
+			res.generate.push(fileHandle.file);
+		else
+			res.vortex.push(fileHandle.file);
+	}
+
+	for (const fileHandle of indexes) {
+		if (implRegex.test(fileHandle.file.content))
+			implFiles.push(fileHandle.file);
+		else if (fileHandle.file.isVortex && fileHandle.file.toGenerate) 
+			res.generate.push(fileHandle.file);
+		else
+			res.vortex.push(fileHandle.file);
 	}
 
 	for (const file of implFiles) {

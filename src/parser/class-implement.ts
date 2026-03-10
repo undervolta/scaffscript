@@ -2,12 +2,12 @@ import type {
 	VortexConfig,
 	VortexFile,
 	VortexFileGroup,
-	VortexModule
+	VortexModuleStore
 } from "@types";
 
 import { log } from "@/utils";
 import { implHeaderRegex, arrowFnHeaderRegex } from "@/parser/regex";
-import { convertClassMethods, parseFnParams } from "@/parser/module";
+import { convertClassMethods, parseFnParams } from "@/parser/export-module";
 
 
 /**
@@ -76,7 +76,7 @@ export function parseHeader(str: string, regex: RegExp = implHeaderRegex) {
  * @param module Object with all exported modules
  * @param files Object with `vortex` and `generate` properties, each containing an array of files
  */
-export function implementClass(module: VortexModule, fileGroup: VortexFileGroup, config: VortexConfig) {
+export function implementClass(module: VortexModuleStore, fileGroup: VortexFileGroup, config: VortexConfig) {
 	if (fileGroup.generate.length == 0 && fileGroup.vortex.length == 0) {
 		log.warn("No files to implement classes from.");
 		return false;

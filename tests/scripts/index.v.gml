@@ -1,13 +1,12 @@
 include { y, z, STRING, test, method } from "./script1"
 import * from "./script2"
 
-intg * to "scripts/my_script"
+intg * to "./scripts/my_script"
 
-pub main {
-	@content method
+#[main]
+@content method
 
-	show_debug_message($"y = {@:y}, z = {@typeof z}, STRING = {@nameof STRING}");
+show_debug_message($"y = {@:y}, z = {@typeof z}, STRING = {@nameof STRING}");
 
-	var inst = new MyClass("John", 20);
-	inst.print();
-}
+var inst = new MyClass("John", 20);
+inst.print();

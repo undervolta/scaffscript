@@ -5,8 +5,8 @@ export const fnHeaderRegex = /(function|const|let|var)\s+(?<name>\w+)\s*\((?<par
 export const fnParamsRegex = /\((?<params>[^)]*)\)/g;
 export const arrowFnHeaderRegex = /(?:const|let|var)\s+(?<name>\w+)\s*=\s*(?<params>\([^)]*\)|\w+)\s*=>/g;
 
-export const importRegex =
-	/(?<cmd>import|include)\s+(?<mod>\*|\{[^}]+\}|[A-Za-z0-9_]+)\s+(?<src>from)\s+(?<path>["'][^"']+["'])\s*;?/g;
+export const modControlRegex =
+	/(?<cmd>export|import|include)\s+(?<mod>\*|\{[^}]+\}|[A-Za-z0-9_]+)\s+(?<src>from)\s+(?<path>["'][^"']+["'])\s*;?/g;
 
 export const tabRegex = {
 	oneTab: /^(\t*)/gm,

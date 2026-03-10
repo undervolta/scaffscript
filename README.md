@@ -1,6 +1,6 @@
 # Vortex-GML
 
-A superset language of **GameMaker Language** (GML) for creating module-based GameMaker source codes. This language is mainly used for developing GML libraries, but can also be used for other purposes.
+A superset language of **GameMaker Language** (GML) for creating module-based GameMaker source codes. This minimal language is mainly used for developing GML libraries, but can also be used for other purposes.
 
 > [!WARNING]
 > This project is still in early development. The syntax and features are subject to change. Use at your own risk.
@@ -14,13 +14,29 @@ A superset language of **GameMaker Language** (GML) for creating module-based Ga
 - Togglable integration (auto/manual) to your GameMaker project.
 - And more... (WIP)
 
+## Installation
+
+1. Install [Bun](https://bun.sh) (if not already installed).
+2. Clone this repository.
+3. Install dependencies:
+
+```bash
+bun install
+```
+
+4. Run:
+
+```bash
+bun run vortex <target_path>		# target_path = `src/` by default
+```
+
 ## Usage
 
 Use `*.v.gml` files to mark a file as a Vortex file. Normal `*.gml` files are still supported, but they are not processed by Vortex.
 
 ### Export Module
 
-1. Use `export` statement to export types (a variable, function, class, interface, type, enum, or arrow function) from a Vortex file. You can also use `export * from` to export all types from another Vortex file.
+1. Use `export` statement to export types (a variable, function, class, interface, type, enum, or arrow function) from a Vortex file. 
 
 ```js
 // my_file.v.gml
@@ -33,7 +49,7 @@ export function my_func() {
 	show_debug_message("Hello, World!");
 }
 
-// arrow function will be converted to method
+// arrow function will be converted to function expression or method
 export const my_method = (name: string, age: number) => {
 	show_debug_message(`Hello, ${name}! You are ${age} years old.`);
 }
@@ -79,6 +95,9 @@ export type MyIntersectedType = MyType & {
 	address: string;
 }
 ```
+
+> [!WARNING]
+> **(WIP)** You can also use `export * from "<path>"` to export all types from another Vortex file.
 
 ```js
 // index.v.gml
@@ -128,23 +147,39 @@ impl MyClass {
 ```js
 // my_other_file.v.gml
 
-include { my_var, my_func, MyClass: Class } from "my_file";
-/**
- * The generated source code will replace the import statement with the actual content of the exported types.
- * 
- * For example, the above import statement will be replaced with:
-	 * 	var my_var = 1;
-	 * 	function my_func() {}
-	 * 	function MyClass(name, age) constructor {
-	 * 		// ...
-	 *  }
-	 * 
-	 * And the rest of the code will be left as is.
-	 */
+include { my_var, my_func, MyClass } from "my_file"
 
-show_debug_message(my_var);					// 1
-my_func();									// my_func
-var my_instance = new Class("John", 20);	// MyClass
+/**
+ * The generated source code will replace the include statement with the actual content of the exported types.
+ * 
+ * For example, the above include statement will be replaced with:
+
+ var my_var = 1;
+ function my_func() {
+ 	show_debug_message("Hello, World!");
+ }
+ function MyClass(name, age) constructor {
+ 	// ...
+ }
+
+ */
+
+// non-included lines will be left as is
+show_debug_message("This line will be left as is.");
+
+// you can include multiple modules in a single file
+include my_enum from "my_file"
+/**
+ enum MY_ENUM {
+  	A,
+  	B,
+  	C
+ }
+ */
+
+ // you can include normal GML files as well
+ include { "some_script.gml", "another_gml" } from "./scripts"	
+ // must be in curly braces and double quotes, the order of the files will be preserved, the `.gml` extension is optional
 ```
 
 2. Use `import` statement to import a module from another Vortex file, and then use `@<keyword>` statements to load and replace the content of a Vortex file to certain places in the code.
@@ -160,7 +195,7 @@ var my_instance = new Class("John", 20);	// MyClass
 ```js
 // my_import.v.gml
 
-import { my_var } from "my_file";
+import { my_var } from "my_file"
 
 show_debug_message(@valueof my_var);	// 1
 show_debug_message(@:my_var);			// 1
@@ -172,7 +207,7 @@ show_debug_message(@content my_var);	// var my_var = 1;
 ```js
 // my_other_file.v.gml
 
-import * from "my_file";
+import * from "my_file"
 
 my_method = function() {
 	@content my_var;					// replace with `var my_var = 1;`
@@ -191,20 +226,18 @@ my_method = function() {
 
 ### GameMaker Integration
 
-Use `intg` statement to mark this file as an integration target, and `pub` statement to mark a block of code as a write target. The content of the file will be written to the actual GameMaker project.
+Use `intg` statement to mark this file as an integration target, and `#[<name_or_event>]` statement to mark a block of code as a write target. The content of the file will be written to the actual GameMaker project.
 
 ```js
 // my_file.v.gml
 
 intg { main, some_mod } to "scripts/my_script"				// integrate to `scripts/my_script/my_script.gml`
 
-pub main {
-	show_debug_message("Hello, from my_script!");
-}
+#[main]
+show_debug_message("Hello, from my_script!");
 
-pub some_mod {
-	show_debug_message("Hello, from my_script (some_mod)!");
-}
+#[some_mod]
+show_debug_message("Hello, from my_script (some_mod)!");
 ```
 
 ```js
@@ -212,13 +245,11 @@ pub some_mod {
 
 intg * to "objects/my_object"	// integrate to `objects/my_object/*`
 
-pub main as "create" {			// integrate to `objects/my_object/Create_0.gml`
-	show_debug_message("Hello, from my_object create event!");
-}
+#[main as "create"]				// integrate to `objects/my_object/Create_0.gml`
+show_debug_message("Hello, from my_object create event!");
 
-pub StepEvent {					// <event>Event is also supported
-	show_debug_message("Hello, from my_object step event!");
-}
+#[StepEvent]					// <event_name>Event is also supported				
+show_debug_message("Hello, from my_object step event!");
 ```
 
 ### Configuration
@@ -235,16 +266,3 @@ const config: Partial<VortexConfig> = {
 export default config;
 ```
 
-## Installation
-
-To install dependencies:
-
-```bash
-bun install
-```
-
-To run:
-
-```bash
-bun run vortex <target_path>		# target_path = `src/` by default
-```

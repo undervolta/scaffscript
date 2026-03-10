@@ -3,7 +3,8 @@ import { expect, test, describe, onTestFinished } from "bun:test";
 import { 
 	// tabRegex, countSubstring,
 	parseHeader,
-	getTabLevels 
+	getTabLevels,
+	modControlRegex
 } from "@/parser";
 
 describe("Regex tests", () => {
@@ -88,7 +89,40 @@ describe("Regex tests", () => {
 		});
 	});
 
-	test.skip("Import regex", () => {
+	test("Import regex", () => {
+		const input = [
+			"import * from \"./script1\"",
+			"include { x, y, z } from \"./script2\"",
+			"include MyEnum from \"./script3\""
+		].join("\n");
 
+		const matches = [...input.matchAll(modControlRegex)];
+
+		for (const [idx, match] of matches.entries()) {
+			const { cmd, mod, src, path } = match.groups!;
+			
+			switch (idx) {
+				case 0:
+					expect(cmd).toBe("import");
+					expect(mod).toBe("*");
+					expect(src).toBe("from");
+					expect(path).toBe("\"./script1\"");
+					break;
+				case 1:
+					expect(cmd).toBe("include");
+					expect(mod).toBe("{ x, y, z }");
+					expect(src).toBe("from");
+					expect(path).toBe("\"./script2\"");
+					break;
+				case 2:
+					expect(cmd).toBe("include");
+					expect(mod).toBe("MyEnum");
+					expect(src).toBe("from");
+					expect(path).toBe("\"./script3\"");
+					break;
+			}
+
+			console.log(`Match ${idx}: ${cmd} ${mod} ${src} ${path}`);
+		}
 	});
 });

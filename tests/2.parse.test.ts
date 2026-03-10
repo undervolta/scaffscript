@@ -3,7 +3,7 @@ import { expect, test, describe } from "bun:test";
 import { getPath, getVortexFiles, getVortexConfig } from "@/fs";
 import { readAndSplitFiles } from "@/fs/grouping";
 import { getExportedModules, implementClass } from "@/parser";
-import type { VortexFile, VortexFileGroup, VortexModule } from "@types";
+import type { VortexFile, VortexFileGroup, VortexModuleStore } from "@types";
 
 
 describe("Process Vortex files", async () => {
@@ -12,7 +12,7 @@ describe("Process Vortex files", async () => {
 	const files = await getVortexFiles(getPath());
 
 	let res: VortexFileGroup | null = null;
-	let module: VortexModule | null = null;
+	let module: VortexModuleStore | null = null;
 
 	test("Read and split files", async () => {
 		res = await readAndSplitFiles(files, config);
