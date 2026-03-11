@@ -42,14 +42,14 @@ Use `*.v.gml` files to mark a file as a Vortex file. Normal `*.gml` files are st
 // my_file.v.gml
 
 export var my_var = 1;
-export let my_let = 2;						// `let` will be removed, so it become instance variable
+export let my_let = 2;						// `let` will be removed, so it'll become an instance variable
 export const MY_CONST = "Hello, World!";	// `const` will be converted to `#macro`
 
 export function my_func() {
 	show_debug_message("Hello, World!");
 }
 
-// arrow function will be converted to function expression or method
+// arrow functions will be converted to function expression or method
 export const my_method = (name: string, age: number) => {
 	show_debug_message(`Hello, ${name}! You are ${age} years old.`);
 }
@@ -60,7 +60,7 @@ export enum MY_ENUM {
 	C
 }
 
-// class will be converted to struct constructor
+// classes will be converted to struct constructor
 export class MyClass {						
 	constructor(name: string, age: number)
 
@@ -96,8 +96,7 @@ export type MyIntersectedType = MyType & {
 }
 ```
 
-> [!WARNING]
-> **(WIP)** You can also use `export * from "<path>"` to export all types from another Vortex file.
+You can do a barrel export (`export * from "<path>"`) as well, so that you can import modules from the parent directory:
 
 ```js
 // index.v.gml
@@ -124,10 +123,11 @@ impl MyClass {
 }
 ```
 
+You can split the implementation into multiple files as well:
+
 ```js
 // set.v.gml
 
-// implementation can be split into multiple files
 impl MyClass {
 	set_age(age: number) {
 		age = age;
@@ -223,6 +223,9 @@ my_method = function() {
 	inst.show_age();					// 20
 }
 ```
+
+> [!WARNING]
+> If you use any of the `@` statements without importing the module first, the statement will be left as is, which won't be processed by Vortex, and won't be accepted by GameMaker.
 
 ### GameMaker Integration
 

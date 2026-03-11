@@ -2,12 +2,13 @@ import {
 	modControlRegex, 
 	contentModRegex, 
 	contentModShortRegex,
+	useModRegex,
 	getTabLevels
 } from "@/parser/regex";
 
 import { insertTabs } from "@/parser/export-module";
 
-import { resolvePath, normalizePath, log, fileExists } from "@/utils";
+import { resolvePath, normalizePath, log, fileExists, swapAndPop } from "@/utils";
 
 import type { 
 	VortexConfig,
@@ -15,7 +16,8 @@ import type {
 	VortexFileGroup,
 	VortexModuleStore,
 	VortexModule,
-	VortexModuleUsage
+	VortexModuleUsage,
+	VortexModuleInterface
 } from "@types";
 
 
@@ -25,7 +27,7 @@ function countTabsBeforeSubstring(str: string, sub: string, tabChar: string): nu
 
 	const lineStart = str.lastIndexOf('\n', idx - 1) + 1;
 	const segment = str.slice(lineStart, idx);
-
+	
 	let count = 0;
 	for (const ch of segment) {
 		if (ch === tabChar) count++;
@@ -34,6 +36,7 @@ function countTabsBeforeSubstring(str: string, sub: string, tabChar: string): nu
 
 	return count;
 }
+
 
 /**
  * Get all imported modules from the given file
@@ -279,6 +282,7 @@ export async function implementModules(module: VortexModuleStore, fileGroup: Vor
 
 				const cmdMatches = [...file.content.matchAll(contentModRegex)];
 				const shortCmdMatches = [...file.content.matchAll(contentModShortRegex)];
+				const useMatches = [...file.content.matchAll(useModRegex)];
 
 				for (const match of cmdMatches) {
 					const { cmd: contentCmd, mod: contentMod } = match.groups!;
@@ -293,7 +297,7 @@ export async function implementModules(module: VortexModuleStore, fileGroup: Vor
 						continue;
 
 					if (config.debugLevel >= 1)
-						log.debug(`Content module statement found: \x1b[34m${contentCmd} ${contentMod}\x1b[0m in \x1b[33m${file.name}\x1b[0m from \x1b[32m${file.path}\x1b[0m.`);
+						log.debug(`Content module statement found: \x1b[34m${contentCmd} ${contentMod}\x1b[0m in \x1b[33m${file.name === '' ? "index" : file.name}\x1b[0m from \x1b[32m${file.path}\x1b[0m.`);
 
 					let parsedStr = "";
 
@@ -333,10 +337,6 @@ export async function implementModules(module: VortexModuleStore, fileGroup: Vor
 							
 							file.content = file.content.replace(`@valueof ${contentMod}`, parsedStr);
 							break;
-
-						case "use":
-
-							break;
 					}
 				}
 
@@ -348,6 +348,9 @@ export async function implementModules(module: VortexModuleStore, fileGroup: Vor
 						return null;
 					}
 
+					if (config.debugLevel >= 1)
+						log.debug(`Valueof module statement found: \x1b[34m${contentMod}\x1b[0m in \x1b[33m${file.name}\x1b[0m from \x1b[32m${file.path}\x1b[0m.`);
+
 					// skip if the module is not found
 					if (!(`@${contentMod}` in mod.modList!) && !(contentMod in mod.modList!))
 						continue;
@@ -355,6 +358,64 @@ export async function implementModules(module: VortexModuleStore, fileGroup: Vor
 					const parsedStr = module[mod.targetPath!]![(`@${contentMod}` in module[mod.targetPath!]!) ? `@${contentMod}` : contentMod]!.value;
 					
 					file.content = file.content.replace(`@:${contentMod}`, parsedStr);
+				}
+
+				for (const match of useMatches) {
+					const { mod: contentMod, body } = match.groups!;
+
+					if (!contentMod || !body) {
+						log.error(`Invalid content module statement: \x1b[34m@use ${contentMod} ${body}\x1b[0m in \x1b[33m${file.name}\x1b[0m from \x1b[32m${file.path}\x1b[0m. Aborting...`);
+						return null;
+					}
+
+					// skip if the module is not found
+					if (!(`@${contentMod}` in mod.modList!) && !(contentMod in mod.modList!))
+						continue;
+
+					if (config.debugLevel >= 1)
+						log.debug(`Use module statement found: \x1b[34m@use ${contentMod} ${body}\x1b[0m in \x1b[33m${file.name}\x1b[0m from \x1b[32m${file.path}\x1b[0m.`);
+
+					
+					const lines = body.slice(1, -1).split('\n').filter(Boolean);
+					const pairs = lines.map(l => l.split(':').map(p => {
+						const delimIdx = p.lastIndexOf(',');
+						
+						return p.slice(0, delimIdx === -1 ? undefined : delimIdx).trim();
+					}));
+
+					const tabChar = config.tabType === "1t" ? '\t' : (config.tabType === "2s" ? '  ' : '    ');
+					const tabCnt = countTabsBeforeSubstring(file.content.slice(file.content.lastIndexOf('\n', match.index), match.index + match[0]!.length), "@", tabChar);
+					const tabLevels = getTabLevels(body, config.tabType).map(l => l + tabCnt);
+					
+					const currMod = module[mod.targetPath!]![(`@${contentMod}` in module[mod.targetPath!]!) ? `@${contentMod}` : contentMod]! as VortexModuleInterface;
+					const modMember = Object.entries(currMod.member);
+					const tabLevel = tabCnt + tabLevels[Math.min(1, tabLevels.length - 1)]!;
+
+					let res = "{\n";
+					for (const [idx, [mName, mVal]] of modMember.entries()) {
+						const pairIdx = pairs.findIndex(p => p[0] === mName);
+						const pair = pairIdx > -1 ? pairs[pairIdx]! : null;
+						const value = pair 
+							? (pair.length === 2 ? pair[1]! : mVal.value) 
+							: mVal.value;
+
+						if (value) {
+							res += `${insertTabs(tabLevel, config.tabType)}${mName}: ${value}${idx < modMember.length - 2 ? "," : ""}\n`;
+						}
+
+						if (pairIdx > -1)
+							swapAndPop(pairs, pairIdx);
+					}
+
+					for (const [idx, pair] of pairs.entries()) {
+						if (idx === 0) 
+							res = res.slice(0, -1) + ",\n";
+
+						res += `${insertTabs(tabLevel, config.tabType)}${pair[0]}: ${pair[1]}${idx < pairs.length - 1 ? "," : ""}\n`;
+					}
+					res += insertTabs(tabCnt, config.tabType) + "}";
+
+					file.content = file.content.replace(match[0]!, res);
 				}
 				break;
 		}

@@ -9,6 +9,7 @@ export const modControlRegex =
 	/(?<cmd>export|import|include)\s+(?<mod>\*|\{[^}]+\}|[A-Za-z0-9_]+)\s+(?<src>from)\s+(?<path>["'][^"']+["'])\s*;?/g;
 
 export const contentModRegex = /@(?<cmd>content|valueof|typeof|nameof)\s+(?<mod>[A-Za-z0-9_]+)/g;
+export const useModRegex = /@use\s+(?<mod>[A-Za-z0-9_]+)\s+(?<body>\{[.\s\S]+?\})/g;
 export const contentModShortRegex = /@:(?<mod>[A-Za-z0-9_]+)\s*/g;
 
 export const tabRegex = {
