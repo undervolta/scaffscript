@@ -8,6 +8,9 @@ export const arrowFnHeaderRegex = /(?:const|let|var)\s+(?<name>\w+)\s*=\s*(?<par
 export const modControlRegex =
 	/(?<cmd>export|import|include)\s+(?<mod>\*|\{[^}]+\}|[A-Za-z0-9_]+)\s+(?<src>from)\s+(?<path>["'][^"']+["'])\s*;?/g;
 
+export const contentModRegex = /@(?<cmd>content|valueof|typeof|nameof)\s+(?<mod>[A-Za-z0-9_]+)/g;
+export const contentModShortRegex = /@:(?<mod>[A-Za-z0-9_]+)\s*/g;
+
 export const tabRegex = {
 	oneTab: /^(\t*)/gm,
 	twoSpaces: /^(\ {2})*/gm,

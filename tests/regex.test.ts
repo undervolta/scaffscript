@@ -4,7 +4,9 @@ import {
 	// tabRegex, countSubstring,
 	parseHeader,
 	getTabLevels,
-	modControlRegex
+	modControlRegex,
+	contentModRegex,
+	contentModShortRegex
 } from "@/parser";
 
 describe("Regex tests", () => {
@@ -123,6 +125,29 @@ describe("Regex tests", () => {
 			}
 
 			console.log(`Match ${idx}: ${cmd} ${mod} ${src} ${path}`);
+		}
+	});
+
+	test("Content mod regex", () => {
+		const input = [
+			"@content MyConst",
+			"var abc = @valueof MyVar",
+			"type = @typeof MyOtherVar",
+			"obj.name = @nameof MyFunc",
+			"var def = @:MyVar"
+		].join("\n");
+
+		const contentMatches = [...input.matchAll(contentModRegex)];
+		const shortMatches = [...input.matchAll(contentModShortRegex)];
+
+		for (const match of contentMatches) {
+			const { cmd, mod } = match.groups!;
+			console.log(`Content match -> cmd: ${cmd}, mod: ${mod}`);
+		}
+
+		for (const match of shortMatches) {
+			const { mod } = match.groups!;
+			console.log(`Short match -> mod: ${mod}`);
 		}
 	});
 });

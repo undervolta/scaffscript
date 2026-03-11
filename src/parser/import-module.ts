@@ -1,91 +1,218 @@
-import { modControlRegex } from "@/parser/regex";
-import { resolvePath, normalizePath, log } from "@/utils";
+import { 
+	modControlRegex, 
+	contentModRegex, 
+	contentModShortRegex,
+	getTabLevels
+} from "@/parser/regex";
+
+import { insertTabs } from "@/parser/export-module";
+
+import { resolvePath, normalizePath, log, fileExists } from "@/utils";
+
 import type { 
+	VortexConfig,
 	VortexFile,
+	VortexFileGroup,
 	VortexModuleStore,
 	VortexModule,
 	VortexModuleUsage
 } from "@types";
 
+
+function countTabsBeforeSubstring(str: string, sub: string, tabChar: string): number {
+	const idx = str.indexOf(sub);
+	if (idx === -1) return -1;
+
+	const lineStart = str.lastIndexOf('\n', idx - 1) + 1;
+	const segment = str.slice(lineStart, idx);
+
+	let count = 0;
+	for (const ch of segment) {
+		if (ch === tabChar) count++;
+		else break; 
+	}
+
+	return count;
+}
+
 /**
  * Get all imported modules from the given file
  * @param module Object with all exported modules
+ * @param fileGroup Object with `vortex` and `generate` properties, each containing an array of files
  * @param file File to search in
- * @returns Array of imported modules
+ * @param config Vortex config
+ * @returns Array of used modules
  */
-export function getModuleUsage(module: VortexModuleStore, file: VortexFile): VortexModuleUsage[] | null {
+export async function getModuleUsage(module: VortexModuleStore, fileGroup: VortexFileGroup, file: VortexFile, config: VortexConfig): Promise<VortexModuleUsage[] | null> {
 	const matches = [...file.content.matchAll(modControlRegex)];
-	
-	return matches.map(match => {
-		const { cmd, mod, /*src,*/ path } = match.groups!;
-		const res: VortexModuleUsage = {
-			cmd: null,
-			mods: null,
-			//src: null,
-			targetPath: null
-		};
-		
-		if (!(cmd && mod /*&& src*/ && path)) {
-			log.error(`Invalid module control statement: \x1b[34m${cmd} ${mod} from ${path}\x1b[0m in \x1b[33m${file.name}\x1b[0m from \x1b[32m${file.path}\x1b[0m. Aborting...`);
-			return null;
-		}
-		
-		const fromPath = normalizePath(resolvePath(`${file.path}/${path.slice(1, -1)}`));
-		const mods: VortexModule[] = [];
-		const alias: Record<string, string> = {};
+	const limit = 10;
+	const results: VortexModuleUsage[] = [];
 
-		if (!module[fromPath]) {
-			log.error(`Module from \x1b[33m${fromPath}\x1b[0m not found. Aborting...`);
-			return null;
-		}
+	let isInvalid = false;
 
-		if (mod === '*' || (mod.startsWith('{') && mod.endsWith('}'))) {
-			const targetMods = (mod === '*') 
-				? null : mod.slice(1, -1).split(',').map(m => {
-					const split = m.split(':');
-					const key = split[0]!.trim();
+	for (let i = 0; i < matches.length; i += limit) {
+		const batch = matches.slice(i, i + limit);
 
-					if (split.length === 1)
-						alias[key] = key;
-					else
-						alias[key] = split[1]!.trim();
-					
-					return key;
-				});
+		const res = await Promise.all(batch.map(async match => {
+			const { cmd, mod, /*src,*/ path } = match.groups!;
+			const res: VortexModuleUsage = {
+				cmd: null,
+				files: null,
+				modList: null,
+				targetPath: null,
+				targetStr: ""
+			};
 			
-			Object.entries(module[fromPath])
-				.forEach(([key, value]) => {
-					if (mod === '*') 
-						mods.push({ name: key, as: key, value });
-					else if (targetMods!.includes(key)) 
-						mods.push({ name: key, as: alias[key] ?? key, value });
-				});
-		} 
-		else {
-			if (!module[fromPath][mod]) 
-				return res;
+			if (!(cmd && mod /*&& src*/ && path)) {
+				log.error(`Invalid module control statement: \x1b[34m${cmd} ${mod} from ${path}\x1b[0m in \x1b[33m${file.name}\x1b[0m from \x1b[32m${file.path}\x1b[0m. Aborting...`);
+				isInvalid = true;
+				return null;
+			}
+			
+			const fromPath = normalizePath(resolvePath(`${file.path}/${config.path[path.slice(1, -1)] ?? path.slice(1, -1)}`));
+			const modList: Record<string, VortexModule> = {};
+			const alias: Record<string, string> = {};
 
-			mods.push({ name: mod, as: mod, value: module[fromPath][mod] });
-		}
+			if (!module[fromPath]) {
+				// try to load the path as a normal GML file
+				if (cmd === "include" && (mod.startsWith('{') && (mod.includes('"') || mod.includes("'")))) {
+					const files = mod.slice(1, -1).split(',').map(m => m.trim());
+					const filePaths: (string | VortexFile)[] = []; 
 
-		return {
-			cmd: cmd as "export" | "import" | "include", 
-			mods, 
-			//src, 
-			targetPath: normalizePath(resolvePath(path!.slice(1, -1)))
-		};
-	});
+					for (const f of files) {
+						const filePath = normalizePath(resolvePath(`${file.path}/${f.slice(1, -1)}`));
+						const targetFile = fileGroup.normal.find(fl => {
+							let targetFile = `${fl.path}/${fl.name}`;
+							let currFile = filePath;
+
+							if (!targetFile.endsWith(".gml"))
+								targetFile += ".gml";
+							if (!currFile.endsWith(".gml"))
+								currFile += ".gml";
+
+							return targetFile === currFile;
+						});
+
+						if (targetFile) 
+							filePaths.push(targetFile);
+						else if (await fileExists(filePath))
+							filePaths.push(filePath);
+						else {
+							if (config.onNotFound === "error") {
+								log.error(`File \x1b[33m${f.slice(1, -1)}\x1b[0m from \x1b[32m${file.path}\x1b[0m not found. Aborting...`);
+								isInvalid = true;
+								return null;
+							} else
+								log.warn(`File \x1b[33m${f.slice(1, -1)}\x1b[0m from \x1b[32m${file.path}\x1b[0m not found. Skipping this file...`);
+						}
+					}
+					
+					return {
+						cmd: cmd as "export" | "import" | "include", 
+						files: filePaths,
+						modList, 
+						targetPath: fromPath,
+						targetStr: match[0]!
+					};
+				}
+
+				log.error(`Path \x1b[33m${fromPath}\x1b[0m doesn't have any exported modules. Aborting...`);
+				isInvalid = true;
+				return null;
+			}
+
+			if (mod === '*' || (mod.startsWith('{') && mod.endsWith('}'))) {
+				const targetMods = (mod === '*') 
+					? null : mod.slice(1, -1).split(',').map(m => {
+						const split = m.split(':');
+						const key = split[0]!.trim();
+
+						if (split.length === 1)
+							alias[key] = key;
+						else
+							alias[key] = split[1]!.trim();
+
+						if (!module[fromPath]) {
+							if (config.onNotFound === "error") {
+								log.error(`Path \x1b[33m${fromPath}\x1b[0m doesn't have any exported modules. Aborting...`);
+								isInvalid = true;
+							} else
+								log.warn(`Path \x1b[33m${fromPath}\x1b[0m doesn't have any exported modules. Skipping this module...`);
+								
+							return null;
+						}
+						
+						if (!module[fromPath][key]) {
+							if (config.onNotFound === "error") {
+								log.error(`Module \x1b[33m${key}\x1b[0m from \x1b[32m${fromPath}\x1b[0m not found. Aborting...`);
+								isInvalid = true;
+							} else
+								log.warn(`Module \x1b[33m${key}\x1b[0m from \x1b[32m${fromPath}\x1b[0m not found. Skipping this module...`);
+								
+							return null;
+						}
+
+						return key;
+					}).filter(Boolean);
+				
+				Object.entries(module[fromPath])
+					.forEach(([key, value]) => {
+						if (mod === '*') 
+							modList[key] = { name: key, as: key, value, usingAlias: false };
+						else if (targetMods!.includes(key)) {
+							const usingAlias = (key in alias && alias[key] !== key);
+
+							modList[alias[key] ?? key] = { name: key, as: alias[key] ?? key, value, usingAlias };
+
+							if (usingAlias) {
+								if (!module[fromPath]) 
+									module[fromPath] = {};
+
+								module[fromPath][`@${alias[key]}`] = value;
+							}
+						}
+					});
+			} 
+			else {
+				if (!module[fromPath][mod]) {
+					if (config.onNotFound === "error") {
+						log.error(`Module \x1b[33m${mod}\x1b[0m from \x1b[32m${fromPath}\x1b[0m not found. Aborting...`);
+						isInvalid = true;
+					} else
+						log.warn(`Module \x1b[33m${mod}\x1b[0m from \x1b[32m${fromPath}\x1b[0m not found. Skipping this module...`);
+						
+					return res;
+				}
+
+				modList[mod] = { name: mod, as: mod, value: module[fromPath][mod], usingAlias: false };
+			}
+
+			return {
+				cmd: cmd as "export" | "import" | "include", 
+				files: null,
+				modList, 
+				targetPath: fromPath,
+				targetStr: match[0]!
+			};
+		}));
+
+		if (isInvalid) break;
+
+		results.push(...res);
+	}
+
+	return (!isInvalid && results.every(r => r)) ? results : null;
 }
 
-export function implementModules(module: VortexModuleStore, file: VortexFile, mods?: VortexModuleUsage[] | null) {
+export async function implementModules(module: VortexModuleStore, fileGroup: VortexFileGroup, file: VortexFile, config: VortexConfig, mods?: VortexModuleUsage[] | null) {
 	if (!mods) 
-		mods = getModuleUsage(module, file);
+		mods = await getModuleUsage(module, fileGroup, file, config);
 	
 	if (!mods) 
 		return null;
 
-	mods.reduce<Record<string, VortexModule> | null>((acc, mod) => {
-		if (!mod || acc === null) 
+	for (const mod of mods) {
+		if (!mod) 
 			return null;
 
 		if (!mod.cmd)
@@ -98,13 +225,145 @@ export function implementModules(module: VortexModuleStore, file: VortexFile, mo
 				if (!module[thisPath]) 
 					module[thisPath] = {};
 
-				mod.mods?.forEach(m => module[thisPath]![m.as] = m.value);
+				Object.entries(mod.modList!)
+					.forEach(([_, value]) => {
+						module[thisPath]![value.as] = value.value;
+					});
 				//console.log(`Module from ${thisPath}: ${JSON.stringify(module[thisPath], null, 2)}`);
 				break;
-		}
 
-		return acc;
-	}, {});
+			case "include":
+				let toReplace = "";
+
+				if (!mod.files) {
+					if (!mod.modList) 
+						return null;
+
+					const modEntries = Object.entries(mod.modList);
+					const modLen = modEntries.length;
+					const modIterator = modEntries.entries();
+
+					for (const [idx, [_, include]] of modIterator) {
+						if (idx > 0) switch (include.value.type) {
+							case "object":
+							case "method":
+							case "array":
+							case "enum":
+								toReplace += "\n";
+								break;
+						}
+
+						toReplace += include.value.parsedStr + "\n";
+						
+						if (idx === modLen - 1)
+							toReplace += "\n";
+					}
+
+					file.content = file.content.replace(mod.targetStr, toReplace);
+				} else {
+					for (const fileOrPath of mod.files) {
+						if (typeof fileOrPath === "string") {
+							const content = await Bun.file(fileOrPath).text();
+							
+							toReplace += content + "\n\n";
+						} else
+							toReplace += fileOrPath.content + "\n\n";
+					}
+
+					file.content = file.content.replace(mod.targetStr, toReplace);
+				}
+				break;
+
+			case "import":
+				file.content = file.content.replace(mod.targetStr, "");
+
+				const cmdMatches = [...file.content.matchAll(contentModRegex)];
+				const shortCmdMatches = [...file.content.matchAll(contentModShortRegex)];
+
+				for (const match of cmdMatches) {
+					const { cmd: contentCmd, mod: contentMod } = match.groups!;
+
+					if (!contentCmd || !contentMod) {
+						log.error(`Invalid content module statement: \x1b[34m${contentCmd} ${contentMod}\x1b[0m in \x1b[33m${file.name}\x1b[0m from \x1b[32m${file.path}\x1b[0m. Aborting...`);
+						return null;
+					}
+
+					// skip if the module is not found
+					if (!(`@${contentMod}` in mod.modList!) && !(contentMod in mod.modList!))
+						continue;
+
+					if (config.debugLevel >= 1)
+						log.debug(`Content module statement found: \x1b[34m${contentCmd} ${contentMod}\x1b[0m in \x1b[33m${file.name}\x1b[0m from \x1b[32m${file.path}\x1b[0m.`);
+
+					let parsedStr = "";
+
+					switch (contentCmd) {
+						case "content":
+							const tabChar = (config.tabType === "1t") ? '\t' : (config.tabType === "2s" ? '  ' : '    ');
+							const tabCnt = countTabsBeforeSubstring(file.content, match[0]!, tabChar);
+							
+							parsedStr = module[mod.targetPath!]![(`@${contentMod}` in module[mod.targetPath!]!) ? `@${contentMod}` : contentMod]!.parsedStr;
+							
+							if (tabCnt > 0) {
+								const tabLevels = getTabLevels(parsedStr, config.tabType).map(l => l + tabCnt);
+
+								file.content = file.content
+									.replace(match[0]!, parsedStr
+										.split('\n')
+										.map((l, i) => tabLevels[i] ? (insertTabs(tabLevels[i], config.tabType) + l) : l)
+										.join('\n'));
+							} else
+								file.content = file.content.replace(match[0]!, parsedStr);
+							break;
+
+						case "nameof":
+							parsedStr = module[mod.targetPath!]![(`@${contentMod}` in module[mod.targetPath!]!) ? `@${contentMod}` : contentMod]!.name;
+							
+							file.content = file.content.replace(`@nameof ${contentMod}`, parsedStr);
+							break;
+
+						case "typeof":
+							parsedStr = module[mod.targetPath!]![(`@${contentMod}` in module[mod.targetPath!]!) ? `@${contentMod}` : contentMod]!.type;
+							
+							file.content = file.content.replace(`@typeof ${contentMod}`, `"${parsedStr}"`);
+							break;
+
+						case "valueof":
+							parsedStr = module[mod.targetPath!]![(`@${contentMod}` in module[mod.targetPath!]!) ? `@${contentMod}` : contentMod]!.value;
+							
+							file.content = file.content.replace(`@valueof ${contentMod}`, parsedStr);
+							break;
+
+						case "use":
+
+							break;
+					}
+				}
+
+				for (const match of shortCmdMatches) {
+					const { mod: contentMod } = match.groups!;
+
+					if (!contentMod) {
+						log.error(`Invalid content module statement: \x1b[34m@:${contentMod}\x1b[0m in \x1b[33m${file.name}\x1b[0m from \x1b[32m${file.path}\x1b[0m. Aborting...`);
+						return null;
+					}
+
+					// skip if the module is not found
+					if (!(`@${contentMod}` in mod.modList!) && !(contentMod in mod.modList!))
+						continue;
+
+					const parsedStr = module[mod.targetPath!]![(`@${contentMod}` in module[mod.targetPath!]!) ? `@${contentMod}` : contentMod]!.value;
+					
+					file.content = file.content.replace(`@:${contentMod}`, parsedStr);
+				}
+				break;
+		}
+		
+		file.content = file.content.trim() + "\n";
+
+		if (mod.cmd !== "export" && config.debugLevel >= 2) 
+			log.debug(`Content of '${file.name}' after \x1b[36m${mod.cmd}\x1b[0m:\n${file.content}`);
+	}
 
 	return mods;
 }

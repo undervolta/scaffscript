@@ -76,9 +76,11 @@ export async function getVortexConfig(): Promise<VortexConfig> {
 
 	if (!confPath) return {
 		acceptAllIntegration: false,
+		debugLevel: 0,
 		noBackup: false,
 		noIntegration: false,
 		onNotFound: "error",
+		path: {},
 		production: false,
 		tabType: "1t"
 	};
@@ -87,9 +89,11 @@ export async function getVortexConfig(): Promise<VortexConfig> {
 
 	return {
 		acceptAllIntegration: conf.acceptAllIntegration ?? false,
+		debugLevel: conf.debugLevel ?? 0,
 		noBackup: conf.noBackup ?? false,
 		noIntegration: conf.noIntegration ?? false,
 		onNotFound: conf.onNotFound ?? "error",
+		path: conf.path ?? {},
 		production: conf.production ?? false,
 		tabType: conf.tabType ?? "1t"
 	};

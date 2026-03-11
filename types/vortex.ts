@@ -1,8 +1,10 @@
 export type VortexConfig = {
 	acceptAllIntegration: boolean;
+	debugLevel: 0 | 1 | 2;
 	noBackup: boolean;
 	noIntegration: boolean;
 	onNotFound: "error" | "ignore";
+	path: Record<string, string>;
 	production: boolean;
 	tabType: "1t" | "2s" | "4s";
 };
@@ -25,7 +27,7 @@ export type VortexFileGroup = {
 
 export type VortexModuleStore = {
 	[filePathName: string]: {
-		[exportName: string]:
+		[exportName: string]:		// use `@` prefix for the module usage to avoid conflict with built-in keywords
 			| VortexModuleConst
 			| VortexModuleFunction
 			| VortexModuleInterface
@@ -86,7 +88,7 @@ export type VortexModuleRetry = {
 };
 
 export type VortexModule = {
-	name: string, 
+	name: string;
 	as: string; 
 	value: 
 		| VortexModuleConst
@@ -95,10 +97,15 @@ export type VortexModule = {
 		| VortexModuleType
 		| VortexModuleVar
 		| VortexModuleDefault;
+	usingAlias: boolean;
 }
 
 export type VortexModuleUsage = {
 	cmd: "export" | "import" | "include" | null;
-	mods: VortexModule[] | null;
+	files: (string | VortexFile)[] | null;
+	modList: {
+		[moduleAlias: string]: VortexModule
+	} | null;
 	targetPath: string | null;
+	targetStr: string;
 } | null;

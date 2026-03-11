@@ -8,8 +8,7 @@ import type {
 } from "@types";
 
 import { log } from "@/utils";
-import { parseHeader } from "@/parser/class-implement";
-import { fnHeaderRegex, fnParamsRegex } from "@/parser/regex";
+import { fnParamsRegex } from "@/parser/regex";
 
 
 function inferType(value: string): "any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum" {
@@ -564,7 +563,7 @@ export function getExportedModules(files: VortexFileGroup, config: VortexConfig)
 							module[filePath] = {};
 
 						const parsedStr = (varType !== "const")
-							? (`${noVarKeyword ? '' : 'var '}${name} = ${valuePart};`)
+							? (`${varType === "let" ? '' : 'var '}${name} = ${valuePart};`)
 							: `#macro ${name} ${valuePart}`;
 						
 						module[filePath][name] = { name, value: valuePart, type: valueType, parsedStr };

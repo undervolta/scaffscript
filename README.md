@@ -42,7 +42,7 @@ Use `*.v.gml` files to mark a file as a Vortex file. Normal `*.gml` files are st
 // my_file.v.gml
 
 export var my_var = 1;
-export let my_let = 2;						// `let` will be converted to `var`
+export let my_let = 2;						// `let` will be removed, so it become instance variable
 export const MY_CONST = "Hello, World!";	// `const` will be converted to `#macro`
 
 export function my_func() {
