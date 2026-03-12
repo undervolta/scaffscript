@@ -1,3 +1,5 @@
+import type { GMEvent } from "./gm-event";
+
 export type VortexConfig = {
 	acceptAllIntegration: boolean;		// accept all generated files to be integrated without manual confirmation (default = false)
 	debugLevel: 0 | 1 | 2;				// debug level (default = 0, 0 = no debug, 1 = basic debug, 2 = verbose debug)
@@ -114,7 +116,7 @@ export type VortexModuleUsage = {
 export type VortexIntegrationBlock = {
 	name: string;
 	body: string;
-	event: string | null;
+	event: GMEvent | null;
 };
 
 export type VortexIntegration = {

@@ -1,5 +1,4 @@
 import path from "path";
-import { getVortexConfig } from "@/fs";
 
 /**
  * Resolve the given path to absolute path

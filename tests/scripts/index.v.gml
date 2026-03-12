@@ -2,7 +2,7 @@ include { y, z, STRING, method } from "./script1"
 import * from "./script1"
 
 intg * to "./scripts/my_script"
-intg other to "./test"
+intg { main, keydown:keyboard_f5 } to "./objects/obj_controller"
 
 #[main]
 /**
@@ -19,5 +19,5 @@ show_debug_message($"y = @:y, z = @valueof z, STRING = {@nameof STRING}");
 var inst = new MyClass("John", 20);
 inst.print();
 
-#[other as create]
+#[keydown:keyboard_f5 Event]
 show_debug_message("Hello, from other block!");

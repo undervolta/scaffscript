@@ -58,9 +58,9 @@ describe("Source Code Generation", async () => {
 
 	test("Generate source code", async () => {
 		if (!intgData) return;
+		
+		const genCnt = await generateSourceCode(intgData, config);
 
-		const valid = await generateSourceCode(intgData, config);
-
-		expect(valid).toBe(true);
+		expect(genCnt).toBeGreaterThan(0);
 	});
 });

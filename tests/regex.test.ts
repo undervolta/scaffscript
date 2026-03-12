@@ -164,7 +164,7 @@ describe("Regex tests", () => {
 			"#[main]",
 			"show_debug_message(\"Hello, World!\");",
 			"",
-			"#[some_mod]",
+			"#[some_mod as abc def]",
 			"show_debug_message(\"Hello, World! (some_mod)\");"
 		].join("\n");
 

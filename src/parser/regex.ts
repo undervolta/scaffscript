@@ -1,4 +1,4 @@
-export const commentRegex = /\/\/[^\n]*|\/\*[\s\S]*?\*\//g;
+export const commentRegex = /\/\/[^\n]*|\/\*(?!\*)[\s\S]*?\*\//g;
 
 export const implRegex = /impl\s+(?<name>[\w+]+)\s+\{\s+(?<body>[.\s\S]+?)\}/g;	
 export const implHeaderRegex = /impl\s+(?<name>\w+)\s*\{/g;

@@ -246,14 +246,29 @@ show_debug_message("Hello, from my_script (some_mod)!");
 ```js
 // my_other_file.v.gml
 
-intg * to "objects/my_object"	// integrate to `objects/my_object/*`
+intg * to "objects/my_object"		// integrate to `objects/my_object/*`
+intg { Step, keydown:keyboard_d } to "objects/my_other_object"	
 
-#[main as "create"]				// integrate to `objects/my_object/Create_0.gml`
+// method 1
+#[main as create]					// integrate to `objects/my_object/Create_0.gml`
 show_debug_message("Hello, from my_object create event!");
 
-#[StepEvent]					// <event_name>Event is also supported				
+// method 2
+#[StepEvent]						// <event_name>Event is also supported				
 show_debug_message("Hello, from my_object step event!");
+
+// method 3
+#[key as KeyPress:KEYBOARD_ENTER]	// use `:` to specify the event number KEYBOARD_ENTER in this case)
+show_debug_message("Hello, from my_object keypress - enter event!");
+
+// method 4
+#[keydown:keyboard_d event]			// the `event`, event type, and event number are case insensitive, add `event` suffix to mark as event (like in method 2 example)
+show_debug_message("Hello, from my_object keydown - d event!");
 ```
+
+> [!NOTE]
+> If you're using method 2 or 4, the `event` keyword is required to mark the block as an event. 
+> The `event` keyword will be omitted in the block name, so `#[StepEvent]` will become `Step` in the integration block (example: `intg { Step } to "objects/my_object"`, notice no `Event` suffix).
 
 ### Configuration
 
