@@ -1,3 +1,5 @@
+export const commentRegex = /\/\/[^\n]*|\/\*[\s\S]*?\*\//g;
+
 export const implRegex = /impl\s+(?<name>[\w+]+)\s+\{\s+(?<body>[.\s\S]+?)\}/g;	
 export const implHeaderRegex = /impl\s+(?<name>\w+)\s*\{/g;
 
@@ -17,6 +19,9 @@ export const tabRegex = {
 	twoSpaces: /^(\ {2})*/gm,
 	fourSpaces: /^(\ {4})*/gm
 };
+
+export const intgRegex = /intg\s+(?<targets>\*|\{[^}]+\}|[A-Za-z0-9_]+)\s+to\s+(?<path>["'][^"']+["'])\s*;?/g;
+export const intgBlockRegex = /#\[(?<name>[^\]]+)\](?<body>[\s\S]*?(?=\n?#\[[^\]]+\]|$))/g;
 
 /**
  * Count the number of occurrences of a substring in a string

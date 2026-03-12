@@ -6,7 +6,9 @@ import {
 	getTabLevels,
 	modControlRegex,
 	contentModRegex,
-	contentModShortRegex
+	contentModShortRegex,
+	intgRegex,
+	intgBlockRegex
 } from "@/parser";
 
 describe("Regex tests", () => {
@@ -148,6 +150,35 @@ describe("Regex tests", () => {
 		for (const match of shortMatches) {
 			const { mod } = match.groups!;
 			console.log(`Short match -> mod: ${mod}`);
+		}
+	});
+
+	test("Integration regex", () => {
+		const input1 = [
+			"intg * to \"./scripts/my_script\"",
+			"intg { main, some_mod } to \"./objects/obj_name\"",
+			"intg main to \"./scripts/my_script2\""
+		].join("\n");
+
+		const input2 = [
+			"#[main]",
+			"show_debug_message(\"Hello, World!\");",
+			"",
+			"#[some_mod]",
+			"show_debug_message(\"Hello, World! (some_mod)\");"
+		].join("\n");
+
+		const matches = [...input1.matchAll(intgRegex)];
+		const blockMatches = [...input2.matchAll(intgBlockRegex)];
+
+		for (const match of matches) {
+			const { targets, path } = match.groups!;
+			console.log(`Match -> targets: ${targets}, path: ${path}`);
+		}
+
+		for (const match of blockMatches) {
+			const { name, body } = match.groups!;
+			console.log(`Block match -> name: ${name}, body: ${body}`);
 		}
 	});
 });

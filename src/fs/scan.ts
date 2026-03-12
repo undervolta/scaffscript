@@ -82,7 +82,8 @@ export async function getVortexConfig(): Promise<VortexConfig> {
 		onNotFound: "error",
 		path: {},
 		production: false,
-		tabType: "1t"
+		tabType: "1t",
+		useGmAssetPath: false
 	};
 
 	const conf = (await import(confPath)).default;
@@ -95,6 +96,7 @@ export async function getVortexConfig(): Promise<VortexConfig> {
 		onNotFound: conf.onNotFound ?? "error",
 		path: conf.path ?? {},
 		production: conf.production ?? false,
-		tabType: conf.tabType ?? "1t"
+		tabType: conf.tabType ?? "1t",
+		useGmAssetPath: conf.useGmAssetPath ?? false
 	};
 }

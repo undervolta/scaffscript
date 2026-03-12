@@ -1,6 +1,6 @@
 import type { VortexConfig, VortexFile, VortexFileGroup } from "@types";
 import { log } from "@/utils";
-import { implRegex, modControlRegex } from "@/parser/regex";
+import { implRegex, modControlRegex, commentRegex } from "@/parser/regex";
 
 /**
  * Group the given files into Vortex files, files to generate, and normal files, and read their contents
@@ -26,6 +26,11 @@ export async function readAndSplitFiles(files: VortexFile[], config: VortexConfi
 		file.toGenerate = intgRegex.test(file.content);
 
 		file.name = file.name.replace(".v.gml", "");
+
+		const matchComment = [...file.content.matchAll(commentRegex)];
+		for (const match of matchComment) {
+			file.content = file.content.replace(match[0]!, "");
+		}
 
 		// set entries (index files) to always be the last files to be processed
 		if (file.isIndex) {

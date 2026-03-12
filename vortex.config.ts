@@ -2,13 +2,14 @@ import type { VortexConfig } from "@types";
 
 const config: Partial<VortexConfig> = {
 	acceptAllIntegration: false,
-	debugLevel: 1,
+	debugLevel: 0,
 	noBackup: false,
 	noIntegration: false,
 	production: false,
 	path: {
 		"@scr1": "./script1"
-	}
+	},
+	useGmAssetPath: true
 };
 
 export default config;

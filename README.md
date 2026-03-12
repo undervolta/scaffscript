@@ -234,7 +234,7 @@ Use `intg` statement to mark this file as an integration target, and `#[<name_or
 ```js
 // my_file.v.gml
 
-intg { main, some_mod } to "scripts/my_script"				// integrate to `scripts/my_script/my_script.gml`
+intg { main, some_mod } to "./scripts/my_script"				// integrate to `scripts/my_script/my_script.gml`
 
 #[main]
 show_debug_message("Hello, from my_script!");
