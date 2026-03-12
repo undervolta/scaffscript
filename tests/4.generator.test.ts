@@ -15,7 +15,8 @@ import {
 import type { 
 	VortexModuleUsage,
 	VortexIntegration
- } from "@types";
+} from "@types";
+
 
 describe("Source Code Generation", async () => {
 	// assume the config and files are valid (from test 1)
