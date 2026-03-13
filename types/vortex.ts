@@ -116,11 +116,26 @@ export type VortexModuleUsage = {
 export type VortexIntegrationBlock = {
 	name: string;
 	body: string;
+	path: string | null;
 	event: GMEvent | null;
+	backup: string | null;
 };
 
 export type VortexIntegration = {
 	path: string;
 	targets: VortexIntegrationBlock[];
 	backup: string | null;
+	content: {
+		[intgPath: string]: string;
+	};
 } | null;
+
+export type VortexIntegrationStore = {
+	[intgFilePath: string]: {		// the key is the path to the GM resource in the GM IDE
+		writePath: string;			// the actual path to write the generated source code to
+		dirPath: string;			// the path to the directory containing the GM resource in the GM IDE
+		content: string;
+		backup: string | null;
+		event: GMEvent | null;
+	};
+};

@@ -1,16 +1,8 @@
 import type {
-	VortexConfig,
-	VortexIntegration
+	GMProject,
+	GMEvent
 } from "@types";
 
-import {
-	resolvePath,
-	normalizePath,
-	commonPath,
-	log,
-	fileExists,
-	clearOutDir
-} from "@/utils";
 
 function stripTrailingCommas(input: string): string {
 	const result: string[] = [];
@@ -69,7 +61,22 @@ function stripTrailingCommas(input: string): string {
 	return result.join('');
 }
 
+function createYYScript(name: string, dir: string) {
+	return {
+		
+	};
+}
+
+/**
+ * Parse the given string as JSON, stripping trailing commas first
+ * @param raw String to parse
+ * @returns Parsed JSON
+ */
 export function parseGMJson<T = unknown>(raw: string): T {
 	const validJson = stripTrailingCommas(raw);
 	return JSON.parse(validJson) as T;
+}
+
+export async function createGMResource(project: GMProject, path: string, content: string, event: GMEvent | null) {
+	
 }

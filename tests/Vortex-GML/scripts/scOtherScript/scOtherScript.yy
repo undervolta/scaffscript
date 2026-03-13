@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"scOtherScript",
   "parent":{
-    "name":"Other Group",
-    "path":"folders/Other Group.yy",
+    "name":"Sub Folder",
+    "path":"folders/Other Group/Sub Folder.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

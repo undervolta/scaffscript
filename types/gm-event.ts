@@ -1,5 +1,7 @@
 export type GMEvent = {
 	type: EVENT_TYPE | null;
+	needNum: boolean;
+	dynamicNum: boolean;
 	num: string | null;
 	name: string | null;
 	fileName: string | null;

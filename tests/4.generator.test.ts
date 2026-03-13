@@ -60,8 +60,9 @@ describe("Source Code Generation", async () => {
 	test("Generate source code", async () => {
 		if (!intgData) return;
 		
-		const genCnt = await generateSourceCode(intgData, config);
+		const genFiles = await generateSourceCode(intgData, config);
+		console.log(`Generated files: ${JSON.stringify(genFiles, null, 2)}`);
 
-		expect(genCnt).toBeGreaterThan(0);
+		expect(Object.entries(genFiles).length).toBeGreaterThan(0);
 	});
 });

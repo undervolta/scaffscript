@@ -18,6 +18,10 @@ import {
 	parseGMJson
 } from "@/generator";
 
+import {
+	integrateSourceCodes
+} from "@/integration";
+
 import { 
 	resolvePath 
 } from "@/utils";
@@ -63,17 +67,23 @@ describe("Generated Source Code Integration", async () => {
 
 	if (!intgData) return;
 
-	const genCnt = await generateSourceCode(intgData, config);
+	const genFiles = await generateSourceCode(intgData, config);
 
-	if (genCnt <= 0) return;
+	if (Object.entries(genFiles).length <= 0) return;
 
 	test("Integrate generated source code", async () => {
 		if (!config.noIntegration) {
-			const project = parseGMJson<GMProject>(await Bun.file(resolvePath("./tests/Vortex-GML/Vortex-GML.yyp")).text());
-			console.log(`GM Project: ${JSON.stringify(project, null, 2)}`);
+			const modified = await integrateSourceCodes(genFiles, config, resolvePath("./tests/Vortex-GML/Vortex-GML.yyp"));
+
+			expect(modified).toBeGreaterThan(0);
+
+			//const project = parseGMJson<GMProject>(await Bun.file(resolvePath("./tests/Vortex-GML/Vortex-GML.yyp")).text());
+			//console.log(`GM Project: ${JSON.stringify(project, null, 2)}`);
 			
-			expect(project).toBeDefined();
-		} else
+			//expect(project).toBeDefined();
+		} else {
+			console.log("No integration performed.");
 			expect(true).toBe(true);
-	});
+		}
+	}, 60000);
 });

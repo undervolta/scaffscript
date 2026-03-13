@@ -1,8 +1,8 @@
 include { y, z, STRING, method } from "./script1"
 import * from "./script1"
 
-intg * to "./scripts/my_script"
-intg { main, keydown:keyboard_f5 } to "./objects/obj_controller"
+intg * to "./tests/Vortex-GML/scripts/MyFolder/scMyScript"
+intg { main, objCreate, keydown:keyboard_f5 } to "./tests/Vortex-GML/objects/Objects/oSystem"
 
 #[main]
 /**
@@ -18,6 +18,9 @@ show_debug_message($"y = @:y, z = @valueof z, STRING = {@nameof STRING}");
 
 var inst = new MyClass("John", 20);
 inst.print();
+
+#[objCreate as create]
+show_debug_message("Hello, from oSystem create event!");
 
 #[keydown:keyboard_f5 Event]
 show_debug_message("Hello, from other block!");

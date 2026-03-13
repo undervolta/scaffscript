@@ -61,19 +61,21 @@ function getEventFile(eventInput: string, numInput: string): GMEvent {
 	}
 	
 	if (event === null) 
-		return { type: null, num: null, name: null, fileName: null };
+		return { type: null, needNum: false, dynamicNum: false, num: null, name: null, fileName: null };
 
 	const name = EventName[event];
 	let num = (event === EVENT_TYPE.COLLISION) ? numInput : numInput.toUpperCase();
 	
 	if ((needNum && !dynNum && !(num in EVENT))) 
-		return { type: event, num: null, name, fileName: null };
+		return { type: event, needNum, dynamicNum: dynNum, num: null, name, fileName: null };
 
 	return {
 		type: event,
+		needNum,
+		dynamicNum: dynNum,
 		num,
 		name,
-		fileName: (event === EVENT_TYPE.COLLISION) ? `${name}_${num}` : `${name}_${EVENT[num as keyof typeof EVENT]}`
+		fileName: (event === EVENT_TYPE.COLLISION) ? `${name}_${num}` : `${name}_${EVENT[num as keyof typeof EVENT] ?? 0}`
 	}
 }
 
@@ -113,7 +115,7 @@ export function extractIntegrationData(file: VortexFile, config: VortexConfig): 
 
 			event = getEventFile(eventSplit[0]!, eventSplit[1] ?? "");
 			
-			if (!event.type) {
+			if (event.type === null) {
 				if (config.onNotFound === "error") {
 					log.error(`Invalid event type \x1b[33m${eventType}\x1b[0m found: \x1b[34m#[${header}]\x1b[0m. Aborting...`);
 					return null;
@@ -121,7 +123,7 @@ export function extractIntegrationData(file: VortexFile, config: VortexConfig): 
 					log.warn(`Invalid event type \x1b[33m${eventType}\x1b[0m found: \x1b[34m#[${header}]\x1b[0m. Skipping this block...`);
 					continue;
 				}
-			} else if (!event.num) {
+			} else if (event.num === null && event.needNum) {
 				if (config.onNotFound === "error") {
 					log.error(`Invalid event number \x1b[33m${event.num}\x1b[0m found: \x1b[34m#[${header}]\x1b[0m. Aborting...`);
 					return null;
@@ -138,7 +140,9 @@ export function extractIntegrationData(file: VortexFile, config: VortexConfig): 
 		blocks.push({
 			name,
 			body: body.trim(),
-			event
+			path: "",
+			event,
+			backup: null
 		});
 	}
 	
@@ -160,7 +164,7 @@ export function extractIntegrationData(file: VortexFile, config: VortexConfig): 
 		}
 
 		const targetPath = normalizePath(resolvePath(path.slice(1, -1))).replace(".gml", "");
-
+		
 		if (targets === "*") {
 			if (config.debugLevel >= 1)
 				log.debug(`Integration statement found: \x1b[34mintg * to ${path}\x1b[0m in \x1b[33m${file.name}\x1b[0m from \x1b[32m${file.path}\x1b[0m.`);
@@ -168,7 +172,8 @@ export function extractIntegrationData(file: VortexFile, config: VortexConfig): 
 			res.push({
 				path: targetPath,
 				targets: blocks,
-				backup: null
+				backup: null,
+				content: {}
 			});
 		} else {
 			const targetsArr = !targets.startsWith("{") ? [targets] : targets.slice(1, -1).split(",").map(t => t.trim());
@@ -176,18 +181,19 @@ export function extractIntegrationData(file: VortexFile, config: VortexConfig): 
 			res.push({
 				path: targetPath,
 				targets: [],
-				backup: null
+				backup: null,
+				content: {}
 			});
 			
 			for (const target of targetsArr) {
-				const targetBlock = blocks.find(b => b.name === target);
+				const targetBlock = blocks.find(b => b.name === target.toLowerCase());
 
 				if (!targetBlock) {
 					if (config.onNotFound === "error") {
-						log.error(`Target \x1b[33m${target}\x1b[0m not found for integration statement: \x1b[34m${match[0]}\x1b[0m. Aborting...`);
+						log.error(`Target \x1b[33m${target}\x1b[0m not found for integration targets: \x1b[34m${targets}\x1b[0m. Aborting...`);
 						invalid = true;
 					} else
-						log.warn(`Target \x1b[33m${target}\x1b[0m not found for integration statement: \x1b[34m${match[0]}\x1b[0m. Skipping this statement...`);
+						log.warn(`Target \x1b[33m${target}\x1b[0m not found for integration targets: \x1b[34m${targets}\x1b[0m. Skipping this statement...`);
 					
 					return;
 				}
