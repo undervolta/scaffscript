@@ -19,6 +19,16 @@ export function normalizePath(p: string): string {
 }
 
 /**
+ * Get the relative path from the given root path
+ * @param p Path to get relative path from
+ * @param root Root path
+ * @returns Relative path
+ */
+export function relativePath(p: string, root: string): string {
+	return path.relative(root, p);
+}
+
+/**
  * Compare two paths for equality, resolving them to absolute paths and ignoring case
  * @param a First path to compare
  * @param b Second path to compare
@@ -26,6 +36,15 @@ export function normalizePath(p: string): string {
  */
 export function comparePaths(a: string, b: string): boolean {
 	return path.resolve(a).toLowerCase() === path.resolve(b).toLowerCase();
+}
+
+/**
+ * Check if a path is absolute
+ * @param p Path to check
+ * @returns True if path is absolute, false otherwise
+ */
+export function isAbsolute(p: string): boolean {
+	return path.isAbsolute(p);
 }
 
 /**

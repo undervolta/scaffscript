@@ -1,4 +1,4 @@
-import { resolvePath, normalizePath } from "@/utils";
+import { resolvePath, normalizePath, log } from "@/utils";
 import { readdir, exists } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import type { VortexConfig, VortexFile } from "@types";
@@ -12,11 +12,11 @@ const DEFAULT_PATH = resolvePath(conf.production ? "src" : "tests");
  * @returns Absolute path to scan
  */
 export function getPath() {
-	return resolvePath(
+	return normalizePath(resolvePath(
 		process.argv[2] ?? 
 		prompt(`\x1b[35m[INPUT]\x1b[0m  Scan path (default: ${DEFAULT_PATH}): `) ?? 
 		DEFAULT_PATH
-	);
+	));
 }
 
 /**
@@ -50,9 +50,10 @@ export async function findConfig(filename: string) {
  * @returns Array of VortexFile
  */
 export async function getVortexFiles(path: string): Promise<VortexFile[]> {
+	log.info(`Scanning for \x1b[34m.v.gml\x1b[0m and \x1b[34m.gml\x1b[0m files in \x1b[32m${path}\x1b[0m...`);
 	const files = await readdir(path, { withFileTypes: true, recursive: true });
 
-	return files
+	const vFiles = files
 		.filter(file => file.isFile() && file.name.endsWith(".gml"))
 		.map(file => {
 			return {
@@ -65,6 +66,10 @@ export async function getVortexFiles(path: string): Promise<VortexFile[]> {
 				childs: []
 			};
 		});
+
+	log.info(`Found \x1b[32m${vFiles.filter(file => file.isVortex).length} \x1b[34m.v.gml\x1b[0m file(s) and \x1b[32m${vFiles.filter(file => !file.isVortex).length}\x1b[0m \x1b[34m.gml\x1b[0m file(s).`);
+
+	return vFiles;
 }
 
 /**
@@ -77,6 +82,7 @@ export async function getVortexConfig(): Promise<VortexConfig> {
 	if (!confPath) return {
 		acceptAllIntegration: false,
 		debugLevel: 0,
+		integrationOption: {},
 		noBackup: false,
 		noIntegration: false,
 		onNotFound: "error",
@@ -91,6 +97,7 @@ export async function getVortexConfig(): Promise<VortexConfig> {
 	return {
 		acceptAllIntegration: conf.acceptAllIntegration ?? false,
 		debugLevel: conf.debugLevel ?? 0,
+		integrationOption: conf.integrationOption ?? {},
 		noBackup: conf.noBackup ?? false,
 		noIntegration: conf.noIntegration ?? false,
 		onNotFound: conf.onNotFound ?? "error",

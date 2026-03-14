@@ -67,33 +67,35 @@ export async function generateSourceCode(intgData: VortexIntegration[], config: 
 					const resvGenPathSplit = resolvedGenPath.split("/");
 					const outFileName = resvGenPathSplit.pop()!;
 					const objectIdx = resvGenPathSplit.findIndex(slug => slug === "objects");
+					const writePath = `${resvGenPathSplit.slice(0, objectIdx+1).join("/")}/${resvGenPathSplit.slice(-1).join("/")}/${outFileName}`;
 
 					await Bun.write(eventFile, target.body + "\n");
 					data.content[resolvedGenPath] = target.body;
 					target.path = resolvedGenPath;
-					res[resolvedGenPath] = {
-						writePath: `${resvGenPathSplit.slice(0, objectIdx+1).join("/")}/${resvGenPathSplit.slice(-1).join("/")}/${outFileName}`,
+					res[writePath] = {
+						fullPath: resolvedGenPath,
 						dirPath: `${resvGenPathSplit.slice(objectIdx + 1, -1).join("/")}`,
 						content: target.body,
 						backup: null,
+						isNew: false,
 						event: target.event
 					};
 					generatedCnt++;
 					
 					if (!config.noBackup) {
-						if (await fileExists(resolvedGenPath)) {
+						if (await fileExists(writePath)) {
 							try {
-								target.backup = await Bun.file(resolvedGenPath).text();
-								res[resolvedGenPath].backup = target.backup;
+								target.backup = await Bun.file(writePath).text();
+								res[writePath].backup = target.backup;
 
-								log.info(`Backup created for \x1b[32m${resolvedGenPath}\x1b[0m.`);
+								log.info(`Backup created for \x1b[32m${writePath}\x1b[0m.`);
 							} 
 							catch (error) {
-								log.error(`Failed to create backup for \x1b[32m${resolvedGenPath}\x1b[0m: ${error}`);
+								log.error(`Failed to create backup for \x1b[32m${writePath}\x1b[0m: ${error}`);
 							}
 						} 
 						else
-							log.info(`File: \x1b[33m${resolvedGenPath}\x1b[0m not found. No backup created.`);
+							log.info(`File: \x1b[33m${writePath}\x1b[0m not found. No backup created.`);
 					}
 
 					log.info(`Source code generated for \x1b[34m${target.event.name + (target.event.num ? `\x1b[0m:\x1b[36m${target.event.num}\x1b[34m` : "")} Event\x1b[0m in \x1b[32m${objName}\x1b[0m.`);
@@ -122,33 +124,35 @@ export async function generateSourceCode(intgData: VortexIntegration[], config: 
 				const resvGenPathSplit = resolvedGenPath.split("/");
 				const outFileName = resvGenPathSplit.pop()!;
 				const scriptIdx = resvGenPathSplit.findIndex(slug => slug === "scripts");
+				const writePath = `${resvGenPathSplit.slice(0, scriptIdx+1).join("/")}/${outFileName.replace(".gml", "")}/${outFileName}`;
 
 				await Bun.write(outFile, body);
 				data.content[resolvedGenPath] = body;
-				res[resolvedGenPath] = {
-					writePath: `${resvGenPathSplit.slice(0, scriptIdx+1).join("/")}/${outFileName.replace(".gml", "")}/${outFileName}`,
+				res[writePath] = {
+					fullPath: resolvedGenPath,
 					dirPath: `${resvGenPathSplit.slice(scriptIdx + 1, -1).join("/")}`,
 					content: body,
 					backup: null,
+					isNew: false,
 					event: null
 				};
 				generatedCnt++;
 				
 				if (!config.noBackup) {
 
-					if (await fileExists(resolvedGenPath)) {
+					if (await fileExists(writePath)) {
 						try {
-							data.backup = await Bun.file(resolvedGenPath).text();
-							res[resolvedGenPath].backup = data.backup;
+							data.backup = await Bun.file(writePath).text();
+							res[writePath].backup = data.backup;
 
-							log.info(`Backup created for \x1b[32m${resolvedGenPath}\x1b[0m.`);
+							log.info(`Backup created for \x1b[32m${writePath}\x1b[0m.`);
 						}
 						catch (error) {
-							log.error(`Failed to create backup for \x1b[32m${resolvedGenPath}\x1b[0m: ${error}`);
+							log.error(`Failed to create backup for \x1b[32m${writePath}\x1b[0m: ${error}`);
 						}
 					} 
 					else
-						log.info(`File: \x1b[33m${resolvedGenPath}\x1b[0m not found. No backup created.`);
+						log.info(`File: \x1b[33m${writePath}\x1b[0m not found. No backup created.`);
 				}
 	
 				log.info(`Source code generated for \x1b[34m${outFileSplit.pop()}\x1b[0m in \x1b[32m${outFileSplit.join("/")}\x1b[0m.`);

@@ -1,6 +1,12 @@
 export type GMResourceRef = {
-  name: string;
-  path: string;
+	name: string;
+	path: string;
+}
+
+export type GMResourceHandle = {
+	type: "scripts" | "objects" | null;
+	name: string | null;
+	dir: string | null;
 }
 
 export type GMProject = {

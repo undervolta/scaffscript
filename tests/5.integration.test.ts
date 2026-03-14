@@ -36,7 +36,8 @@ import type {
 describe("Generated Source Code Integration", async () => {
 	// assume the config and files are valid (from test 1)
 	const config = await getVortexConfig();
-	const files = await getVortexFiles(getPath());
+	const scanPath = getPath();
+	const files = await getVortexFiles(scanPath);
 
 	// assume the files already parsed and processed (from test 2)
 	const fileGroup = await readAndSplitFiles(files, config);
@@ -75,7 +76,7 @@ describe("Generated Source Code Integration", async () => {
 		if (!config.noIntegration) {
 			const modified = await integrateSourceCodes(genFiles, config, resolvePath("./tests/Vortex-GML/Vortex-GML.yyp"));
 
-			expect(modified).toBeGreaterThan(0);
+			expect(modified !== null).toBe(true);
 
 			//const project = parseGMJson<GMProject>(await Bun.file(resolvePath("./tests/Vortex-GML/Vortex-GML.yyp")).text());
 			//console.log(`GM Project: ${JSON.stringify(project, null, 2)}`);

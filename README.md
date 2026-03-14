@@ -225,7 +225,15 @@ my_method = function() {
 ```
 
 > [!WARNING]
-> If you use any of the `@` statements without importing the module first, the statement will be left as is, which won't be processed by Vortex, and won't be accepted by GameMaker.
+> If you use any of the `@` statements without importing the module first, the statement will be left as is, which won't be processed by Vortex, and won't be accepted by GameMaker. Even so, there are some exceptions for non-module `@` statements. Check the special `@` statements below (WIP).
+
+| Keyword | Description | Example |
+| --- | --- | --- |
+| `@now` | Replace the statement with the current timestamp in string (ISO 8601). | `var now = @now;` -> `var now = "2021-01-01T00:00:00.000Z";` |
+| `@today` | Replace the statement with the current date in string (ISO 8601). | `var today = @today;` -> `var today = "2021-01-01";` |
+| `@now_dt` | Replace the statement with the current timestamp in datetime. | `var now_dt = @now_dt;` -> `var now_dt = date_create_datetime(2021, 1, 1, 0, 0, 0);` |
+| `@uuid` | Replace the statement with a random UUID in string. | `var uuid = @uuid;` -> `var uuid = "123e4567-e89b-12d3-a456-426614174000";` |
+
 
 ### GameMaker Integration
 

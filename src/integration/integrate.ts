@@ -13,12 +13,11 @@ import {
 
 import {
 	parseGMJson,
-	createGMResource
+	createGMResourceStr,
+	createGMResource,
+	removeGMResource,
+	modifyYyProject
 } from "@/generator";
-
-import {
-	removeGMResource
-} from "./gm-asset";
 
 
 /**
@@ -32,15 +31,23 @@ export async function integrateSourceCodes(genFile: VortexIntegrationStore, conf
 	const integrations = Object.entries(genFile);
 
 	if (integrations.length <= 0) 
-		return 0;
+		return null;
 
 	projectPath = normalizePath(resolvePath(projectPath));
 
+	if (!projectPath.endsWith(".yyp")) {
+		log.error(`Invalid project path: \x1b[32m${projectPath}\x1b[0m. Aborting...`);
+		return null;
+	}
+
 	const limit = 10;
 	const gmProject = parseGMJson<GMProject>(await Bun.file(projectPath).text());
+	const projectPathSplit = projectPath.split("/");
+	const newFolders: string[] = [];
+	const newResources: string[] = [];
 	let intgCnt = 0;
 
-	log.info(`Integrating generated source codes to \x1b[34m${projectPath.split("/").pop()?.replace(".yyp", "")}\x1b[0m project...`);
+	log.info(`Integrating generated source codes to \x1b[34m${projectPathSplit.pop()?.replace(".yyp", "")}\x1b[0m project...`);
 
 	for (let i = 0; i < integrations.length; i += limit) {
 		const batch = integrations.slice(i, i + limit);
@@ -51,17 +58,30 @@ export async function integrateSourceCodes(genFile: VortexIntegrationStore, conf
 
 			if (isExists) {
 				log.info(`Updating \x1b[32m${path}\x1b[0m...`);
-				await Bun.write(path, data.content);
 			} 
 			else {
 				log.info(`File \x1b[32m${path}\x1b[0m not found. Creating new resource...`);
-				//await createGMResource(gmProject, path, data.content);
+				
+				const { type, name } = await createGMResource(gmProject, path, data, config.integrationOption);
+
+				if (type && name) {
+					newFolders.push(data.dirPath);
+					newResources.push(createGMResourceStr(type, name));
+					data.isNew = true;
+				}
 			}
+
+			await Bun.write(path, data.content);
 			intgCnt++;
 		}));
 	}
+	
+	if (newFolders.length > 0 || newResources.length > 0)
+		await modifyYyProject("add", projectPath, newResources, newFolders);
 
 	if (!config.acceptAllIntegration) {
+		const deleteResources: string[] = [];
+
 		for (const [path, data] of integrations) {
 			const pathSlice = path.split("/");
 
@@ -71,6 +91,7 @@ export async function integrateSourceCodes(genFile: VortexIntegrationStore, conf
 				if (restore.toLowerCase() === "y") {
 					intgCnt--;
 					await Bun.write(path, data.backup);
+
 					log.info(`File \x1b[34m${path}\x1b[0m restored to the original source code.`);
 				}
 			} else {
@@ -82,14 +103,23 @@ export async function integrateSourceCodes(genFile: VortexIntegrationStore, conf
 
 				if (remove.toLowerCase() === "y") {
 					intgCnt--;
-					await removeGMResource(gmProject, path);
+					const { type, name } = await removeGMResource(path, projectPathSplit.join("/"), data);
+					
+					if (type && name) {
+						deleteResources.push(`${type},${name},${data.dirPath}`);
+					}
+
 					log.info(`File \x1b[34m${path}\x1b[0m removed from the project.`);
 				}
 			}
 		}
+
+		if (deleteResources.length > 0)
+			await modifyYyProject("remove", projectPath, deleteResources);
 	}
 
 	log.info(`All source codes integrated successfully. Integrated \x1b[32m${intgCnt}\x1b[0m file(s).`);
-
+	//console.log(`Summaries: ${JSON.stringify(integrations, null, 2)}`);
+	
 	return intgCnt;
 }

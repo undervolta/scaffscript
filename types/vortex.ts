@@ -1,15 +1,16 @@
 import type { GMEvent } from "./gm-event";
 
 export type VortexConfig = {
-	acceptAllIntegration: boolean;		// accept all generated files to be integrated without manual confirmation (default = false)
-	debugLevel: 0 | 1 | 2;				// debug level (default = 0, 0 = no debug, 1 = basic debug, 2 = verbose debug)
-	noBackup: boolean;					// don't backup the original files before integration (default = false)
-	noIntegration: boolean;				// don't integrate the files to GM project (default = false)
-	onNotFound: "error" | "ignore";		// what to do when something is not found (default = "error")
-	path: Record<string, string>;		// path aliases (default = {})
-	production: boolean;				// whether the script is running in production mode (default = false)
-	tabType: "1t" | "2s" | "4s";		// tab type to use when generating source code (default = "1t")
-	useGmAssetPath: boolean;			// whether to use GM asset path when integrating files (default = false). asset path: `scripts` and `objects`
+	acceptAllIntegration: boolean;				// accept all generated files to be integrated without manual confirmation (default = false)
+	debugLevel: 0 | 1 | 2;						// debug level (default = 0, 0 = no debug, 1 = basic debug, 2 = verbose debug)
+	integrationOption: VortexIntegrationOptions;
+	noBackup: boolean;							// don't backup the original files before integration (default = false)
+	noIntegration: boolean;						// don't integrate the files to GM project (default = false)
+	onNotFound: "error" | "ignore";				// what to do when something is not found (default = "error")
+	path: Record<string, string>;				// path aliases (default = {})
+	production: boolean;						// whether the script is running in production mode (default = false)
+	tabType: "1t" | "2s" | "4s";				// tab type to use when generating source code (default = "1t")
+	useGmAssetPath: boolean;					// whether to use GM asset path when integrating files (default = false). asset path: `scripts` and `objects`
 };
 
 export type VortexFile = {
@@ -130,12 +131,19 @@ export type VortexIntegration = {
 	};
 } | null;
 
-export type VortexIntegrationStore = {
-	[intgFilePath: string]: {		// the key is the path to the GM resource in the GM IDE
-		writePath: string;			// the actual path to write the generated source code to
-		dirPath: string;			// the path to the directory containing the GM resource in the GM IDE
-		content: string;
-		backup: string | null;
-		event: GMEvent | null;
-	};
+export type VortexIntegrationSummary = {
+	fullPath: string;			// the full path of generated source code in the './out' directory
+	dirPath: string;			// the path to the directory containing the GM resource in the GM IDE
+	content: string;
+	backup: string | null;
+	isNew: boolean;				// whether the .yy file of the GM resource is new
+	event: GMEvent | null;
 };
+
+export type VortexIntegrationStore = {
+	[intgFilePath: string]: VortexIntegrationSummary;
+};
+
+export type VortexIntegrationOptions = Partial<{
+	isDnd: boolean;
+}>;

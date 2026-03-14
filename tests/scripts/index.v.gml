@@ -1,8 +1,9 @@
 include { y, z, STRING, method } from "./script1"
 import * from "./script1"
 
-intg * to "./tests/Vortex-GML/scripts/MyFolder/scMyScript"
-intg { main, objCreate, keydown:keyboard_f5 } to "./tests/Vortex-GML/objects/Objects/oSystem"
+intg * to "./tests/Vortex-GML/scripts/MyFolder/Sub/scMyNewScript"
+//intg * to "./tests/Vortex-GML/scripts/MyFolder/scMyScript"
+//intg { main, objCreate, keydown:keyboard_f5 } to "./tests/Vortex-GML/objects/Objects/oSystem"
 
 #[main]
 /**
