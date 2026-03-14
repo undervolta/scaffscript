@@ -61,21 +61,23 @@ function getEventFile(eventInput: string, numInput: string): GMEvent {
 	}
 	
 	if (event === null) 
-		return { type: null, needNum: false, dynamicNum: false, num: null, name: null, fileName: null };
+		return { type: null, needNum: false, dynamicNum: false, num: null, numStr: null, name: null, fileName: null, collObj: null };
 
 	const name = EventName[event];
-	let num = (event === EVENT_TYPE.COLLISION) ? numInput : numInput.toUpperCase();
+	let numStr = (event === EVENT_TYPE.COLLISION) ? numInput : numInput.toUpperCase();
 	
-	if ((needNum && !dynNum && !(num in EVENT))) 
-		return { type: event, needNum, dynamicNum: dynNum, num: null, name, fileName: null };
+	if ((needNum && !dynNum && !(numStr in EVENT))) 
+		return { type: event, needNum, dynamicNum: dynNum, num: null, numStr, name, fileName: null, collObj: null };
 
 	return {
 		type: event,
+		num: EVENT[numStr as keyof typeof EVENT] ?? 0,
 		needNum,
 		dynamicNum: dynNum,
-		num,
+		numStr,
 		name,
-		fileName: (event === EVENT_TYPE.COLLISION) ? `${name}_${num}` : `${name}_${EVENT[num as keyof typeof EVENT] ?? 0}`
+		fileName: (event === EVENT_TYPE.COLLISION) ? `${name}_${numInput}` : `${name}_${EVENT[numStr as keyof typeof EVENT] ?? 0}`,
+		collObj: (event === EVENT_TYPE.COLLISION) ? `{"name":"${numInput}","path":"objects/${numInput}/${numInput}.yy",}` : null
 	}
 }
 
@@ -94,7 +96,7 @@ export function extractIntegrationData(file: VortexFile, config: VortexConfig): 
 	for (const match of file.content.matchAll(intgBlockRegex)) {
 		const { name: header, body } = match.groups!;
 
-		const headerSplit = header!.split("as").map(h => h.trim().toLowerCase());
+		const headerSplit = header!.split("as").map(h => !h.includes("collision") ? h.trim().toLowerCase() : h.trim());
 		const name = headerSplit[0]!.replace("event", "").replace("ev", "").trim();
 		const eventType = (headerSplit[0]!.endsWith("event") || headerSplit[0]!.endsWith("ev")) ? name : (headerSplit[1] ?? null);
 
@@ -123,12 +125,12 @@ export function extractIntegrationData(file: VortexFile, config: VortexConfig): 
 					log.warn(`Invalid event type \x1b[33m${eventType}\x1b[0m found: \x1b[34m#[${header}]\x1b[0m. Skipping this block...`);
 					continue;
 				}
-			} else if (event.num === null && event.needNum) {
+			} else if (event.numStr === null && event.needNum) {
 				if (config.onNotFound === "error") {
-					log.error(`Invalid event number \x1b[33m${event.num}\x1b[0m found: \x1b[34m#[${header}]\x1b[0m. Aborting...`);
+					log.error(`Invalid event number \x1b[33m${event.numStr}\x1b[0m found: \x1b[34m#[${header}]\x1b[0m. Aborting...`);
 					return null;
 				} else {
-					log.warn(`Invalid event number \x1b[33m${event.num}\x1b[0m found: \x1b[34m#[${header}]\x1b[0m. Skipping this block...`);
+					log.warn(`Invalid event number \x1b[33m${event.numStr}\x1b[0m found: \x1b[34m#[${header}]\x1b[0m. Skipping this block...`);
 					continue;
 				}
 			}

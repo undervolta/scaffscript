@@ -98,7 +98,7 @@ export async function generateSourceCode(intgData: VortexIntegration[], config: 
 							log.info(`File: \x1b[33m${writePath}\x1b[0m not found. No backup created.`);
 					}
 
-					log.info(`Source code generated for \x1b[34m${target.event.name + (target.event.num ? `\x1b[0m:\x1b[36m${target.event.num}\x1b[34m` : "")} Event\x1b[0m in \x1b[32m${objName}\x1b[0m.`);
+					log.info(`Source code generated for \x1b[34m${target.event.name + (target.event.numStr ? `\x1b[0m:\x1b[36m${target.event.numStr}\x1b[34m` : "")} Event\x1b[0m in \x1b[32m${objName}\x1b[0m.`);
 				}
 			}
 

@@ -75,6 +75,8 @@ export async function integrateSourceCodes(genFile: VortexIntegrationStore, conf
 			intgCnt++;
 		}));
 	}
+
+	log.info(`All source codes written. Please click \x1b[1mReload\x1b[0m button in the GameMaker IDE to apply changes.`);
 	
 	if (newFolders.length > 0 || newResources.length > 0)
 		await modifyYyProject("add", projectPath, newResources, newFolders);
@@ -98,7 +100,7 @@ export async function integrateSourceCodes(genFile: VortexIntegrationStore, conf
 				const fileName = pathSlice.pop()!;
 				const remove = (!data.event 
 					? (prompt(`---\n\x1b[35m[INPUT]\x1b[0m  Remove file \x1b[34m${fileName}\x1b[0m from \x1b[34m${pathSlice.join("/")}\x1b[0m? (y/N) -> `) ?? "n")
-					: (prompt(`---\n\x1b[35m[INPUT]\x1b[0m  Remove \x1b[34m${data.event.name + (data.event.num ? `\x1b[0m:\x1b[36m${data.event.num}\x1b[34m` : "")} Event\x1b[0m from \x1b[34m${pathSlice.join("/")}\x1b[0m? (y/N) -> `) ?? "n")
+					: (prompt(`---\n\x1b[35m[INPUT]\x1b[0m  Remove \x1b[34m${data.event.name + (data.event.numStr ? `\x1b[0m:\x1b[36m${data.event.numStr}\x1b[34m` : "")} Event\x1b[0m from \x1b[34m${pathSlice.join("/")}\x1b[0m? (y/N) -> `) ?? "n")
 				) as "y" | "n";
 
 				if (remove.toLowerCase() === "y") {

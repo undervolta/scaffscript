@@ -24,6 +24,7 @@
   },
   "name":"Vortex-GML",
   "resources":[
+    {"id":{"name":"oPlayer","path":"objects/oPlayer/oPlayer.yy",},},
     {"id":{"name":"oSystem","path":"objects/oSystem/oSystem.yy",},},
     {"id":{"name":"rTest","path":"rooms/rTest/rTest.yy",},},
     {"id":{"name":"scMyScript","path":"scripts/scMyScript/scMyScript.yy",},},

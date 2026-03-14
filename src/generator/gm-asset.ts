@@ -1,8 +1,9 @@
-import type {
-	GMProject,
-	GMResourceHandle,
-	VortexIntegrationSummary,
-	VortexIntegrationOptions
+import {
+	type GMProject,
+	type GMResourceHandle,
+	type VortexIntegrationSummary,
+	type VortexIntegrationOptions,
+	EVENT_TYPE
 } from "@types";
 
 import {
@@ -69,7 +70,14 @@ function stripTrailingCommas(input: string): string {
 	return result.join('');
 }
 
-
+/**
+ * Create YY script string
+ * @param projectYyp Name of the project
+ * @param rescName Name of the script
+ * @param dir Directory of the script
+ * @param options Integration options
+ * @returns YY script string
+ */
 function createYYScript(projectYyp: string, rescName: string, dir: string, options?: VortexIntegrationOptions) {
 	const dirSplit = dir.split("/");
 
@@ -85,6 +93,56 @@ function createYYScript(projectYyp: string, rescName: string, dir: string, optio
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",
+}`;
+}
+
+/**
+ * Create YY object string
+ * @param projectYyp Name of the project
+ * @param rescName Name of the object
+ * @param dir Directory of the object
+ * @param eventList List of events
+ * @param options Integration options
+ * @returns YY object string
+ */
+function createYYObject(projectYyp: string, rescName: string, dir: string, eventList?: string[], options?: VortexIntegrationOptions) {
+	const dirSplit = dir.split("/");
+	const eventStr = eventList?.join("\n") ?? null;
+
+	return `{
+  "$GMObject":"",
+  "%Name":"${rescName}",
+  "eventList":[
+    ${eventStr ?? ""}
+  ],
+  "managed":true,
+  "name":"${rescName}",
+  "overriddenProperties":[],
+  "parent":{
+    "name":"${dir !== "" ? dirSplit.pop()! : projectYyp.replace(".yyp", "")}",
+    "path":"${dir !== "" ? `folders/${dir}.yy` : projectYyp}",
+  },
+  "parentObjectId":null,
+  "persistent":false,
+  "physicsAngularDamping":0.1,
+  "physicsDensity":0.5,
+  "physicsFriction":0.2,
+  "physicsGroup":1,
+  "physicsKinematic":false,
+  "physicsLinearDamping":0.1,
+  "physicsObject":false,
+  "physicsRestitution":0.1,
+  "physicsSensor":false,
+  "physicsShape":1,
+  "physicsShapePoints":[],
+  "physicsStartAwake":true,
+  "properties":[],
+  "resourceType":"GMObject",
+  "resourceVersion":"2.0",
+  "solid":false,
+  "spriteId":null,
+  "spriteMaskId":null,
+  "visible":true,
 }`;
 }
 
@@ -123,7 +181,18 @@ export function createGMResourceStr(type: "scripts" | "objects", name: string) {
 }
 
 /**
- * Create GM resource (currently only supports scripts)
+ * Create GM event string
+ * @param eventType Event type
+ * @param eventNum Event number
+ * @param options Integration options
+ * @returns GM event string
+ */
+export function createGMEventStr(eventType: EVENT_TYPE, eventNum: number | string | null, options?: VortexIntegrationOptions) {
+	return `    {"$GMEvent":"v1","%Name":"",${eventNum !== null ? `"collisionObjectId":${typeof eventNum === "string" ? eventNum : null},` : ""}"eventNum":${typeof eventNum === "number" ? eventNum : 0},"eventType":${eventType},"isDnD":${options?.isDnd ?? false},"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},`;
+}
+
+/**
+ * Create GM resource
  * @param project GM project
  * @param filePath Path to the resource in the GM IDE
  * @param intgContent Integration content
@@ -134,16 +203,60 @@ export async function createGMResource(project: GMProject, filePath: string, int
 	const pathSplit = filePath.split("/");
 
 	if (filePath.includes("scripts")) {
-		if (!(await fileExists(filePath.replace(".gml", ".yy")))) {
-			const yyFilePath = filePath.replace(".gml", ".yy");
+		const yyFilePath = filePath.replace(".gml", ".yy");
+
+		if (!(await fileExists(yyFilePath))) {
 			const yyContent = createYYScript(project["%Name"], pathSplit.at(-2)!, intgContent.dirPath, options);
 
 			try {
 				await Bun.write(yyFilePath, yyContent);
 
 				return { type: "scripts", name: pathSplit.at(-2)!, dir: null };
-			} catch (error) {
+			} 
+			catch (error) {
 				console.error(`Failed to create .yy file for ${filePath}: ${error}`);
+			}
+		}
+	} else if (filePath.includes("objects")) {
+		const yyFilePath = `${pathSplit.slice(0, -1).join("/")}/${pathSplit.at(-2)!}.yy`;
+		
+		if (!(await fileExists(yyFilePath))) {
+			const yyContent = createYYObject(project["%Name"], pathSplit.at(-2)!, intgContent.dirPath, 
+				intgContent.event ? [createGMEventStr(intgContent.event.type!, (intgContent.event.type! === EVENT_TYPE.COLLISION) ? intgContent.event.collObj! : intgContent.event.num!, options)] : [], options
+			);
+
+			try {
+				await Bun.write(yyFilePath, yyContent);
+
+				return { type: "objects", name: pathSplit.at(-2)!, dir: null };
+			} 
+			catch (error) {
+				console.error(`Failed to create .yy file for ${filePath}: ${error}`);
+			}
+		} else {
+			const yyFileSplit = (await Bun.file(yyFilePath).text()).split("\n");
+			const eventStartIdx = yyFileSplit.findIndex(line => line.includes("eventList"));
+			const eventEndIdx = yyFileSplit.findIndex((line, idx) => idx > eventStartIdx && line.includes("]"));
+			const existsEvents = yyFileSplit.slice(eventStartIdx + 1, eventEndIdx);
+			const typeNum = `${intgContent.event!.type!}|${intgContent.event!.num!}`
+			
+			const dupe = existsEvents.find(line => {
+				const evNum = line.split('eventNum":')[1]?.split(",")[0]!;
+				const evType = line.split('eventType":')[1]?.split(",")[0]!;
+
+				return `${evType}|${evNum}` === typeNum;
+			});
+			
+			if (!dupe) {
+				const eventStr = createGMEventStr(intgContent.event!.type!, (intgContent.event!.type! === EVENT_TYPE.COLLISION) ? intgContent.event!.collObj! : intgContent.event!.num!, options);
+				yyFileSplit.splice(eventEndIdx, 0, eventStr);
+				
+				try {
+					await Bun.write(yyFilePath, yyFileSplit.join("\n"));
+				} 
+				catch (error) {
+					console.error(`Failed to modify .yy file for ${filePath}: ${error}`);
+				}
 			}
 		}
 	}
@@ -152,7 +265,7 @@ export async function createGMResource(project: GMProject, filePath: string, int
 }
 
 /**
- * Remove GM resource (currently only supports scripts)
+ * Remove GM resource
  * @param filePath Path to the resource in the GM IDE
  * @param scanPath Path to scan for empty folders
  * @param intgContent Integration content
@@ -170,6 +283,40 @@ export async function removeGMResource(filePath: string, scanPath: string, intgC
 			await deleteDir(pathSplit.join("/"), scanPath);
 
 			return { type: "scripts", name: pathSplit.at(-1)!, dir: intgContent.dirPath };
+		} 
+		catch (error) {
+			console.error(`Failed to remove resource for ${filePath}: ${error}`);
+		}
+	} 
+	else if (filePath.includes("objects")) {
+		try {
+			await Bun.file(filePath).delete();
+			pathSplit.pop();
+
+			if (intgContent.isNew) {
+				await deleteDir(pathSplit.join("/"), scanPath);
+				return { type: "objects", name: pathSplit.at(-1)!, dir: intgContent.dirPath };
+			} 
+			else {
+				const yyFilePath = `${pathSplit.join("/")}/${pathSplit.at(-1)!}.yy`;
+				const yyFileSplit = (await Bun.file(yyFilePath).text()).split("\n");
+				const eventStartIdx = yyFileSplit.findIndex(line => line.includes("eventList"));
+				const eventEndIdx = yyFileSplit.findIndex((line, idx) => idx > eventStartIdx && line.includes("]"));
+				const existsEvents = yyFileSplit.slice(eventStartIdx + 1, eventEndIdx);
+				const typeNum = `${intgContent.event!.type!}|${intgContent.event!.num!}`
+				
+				const evIdx = existsEvents.findIndex(line => {
+					const evNum = line.split('eventNum":')[1]?.split(",")[0]!;
+					const evType = line.split('eventType":')[1]?.split(",")[0]!;
+
+					return `${evType}|${evNum}` === typeNum;
+				});
+
+				if (evIdx > -1) {
+					yyFileSplit.splice(eventStartIdx + evIdx + 1, 1);
+					await Bun.write(yyFilePath, yyFileSplit.join("\n"));
+				}
+			}
 		} 
 		catch (error) {
 			console.error(`Failed to remove resource for ${filePath}: ${error}`);
@@ -224,10 +371,16 @@ export async function modifyYyProject(type: "add" | "remove", projectPath: strin
 		if (toAddRescs) {
 			const rescStartIdx = rawLines.findIndex(line => line.includes("resources"));
 			const rescEndIdx = rawLines.findIndex((line, idx) => idx > rescStartIdx && line.includes("]"));	
-			
-			for (const [idx, r] of toAddRescs.entries()) {
-				rawLines.splice(rescEndIdx + idx, 0, r);
-				addedRescCnt++;
+			const existsRescs = rawLines.slice(rescStartIdx + 1, rescEndIdx);
+
+			for (const resc of toAddRescs) {
+				const name = resc.split('name":"')[1]!.split('",')[0]!;
+				const dupe = existsRescs.find(line => line.includes(`"name":"${name}"`));
+
+				if (!dupe) {
+					rawLines.splice(rescEndIdx + addedRescCnt, 0, resc);
+					addedRescCnt++;
+				}
 			}
 		}
 	} else {

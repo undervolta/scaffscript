@@ -1,9 +1,10 @@
 include { y, z, STRING, method } from "./script1"
 import * from "./script1"
 
-intg * to "./tests/Vortex-GML/scripts/MyFolder/Sub/scMyNewScript"
+//intg * to "./tests/Vortex-GML/scripts/MyFolder/Sub/scMyNewScript"
 //intg * to "./tests/Vortex-GML/scripts/MyFolder/scMyScript"
-//intg { main, objCreate, keydown:keyboard_f5 } to "./tests/Vortex-GML/objects/Objects/oSystem"
+intg { main, objCreate, coll_player } to "./tests/Vortex-GML/objects/Objects/oSystem"
+//intg { objCreate } to "./tests/Vortex-GML/objects/Objects/Sub/oPlayer2"
 
 #[main]
 /**
@@ -25,3 +26,6 @@ show_debug_message("Hello, from oSystem create event!");
 
 #[keydown:keyboard_f5 Event]
 show_debug_message("Hello, from other block!");
+
+#[coll_player as collision:oPlayer]
+show_debug_message("Hello, from collision - oPlayer event!");

@@ -2,9 +2,11 @@ export type GMEvent = {
 	type: EVENT_TYPE | null;
 	needNum: boolean;
 	dynamicNum: boolean;
-	num: string | null;
+	num: number | null;
+	numStr: string | null;
 	name: string | null;
 	fileName: string | null;
+	collObj: string | null;
 };
 
 export const enum EVENT_TYPE {
