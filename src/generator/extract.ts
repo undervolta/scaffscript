@@ -8,6 +8,7 @@ import type {
 	VortexFile,
 	VortexIntegration,
 	VortexIntegrationBlock,
+	VortexIntegrationBlockFlags,
 	GMEvent
 } from "@types";
 
@@ -96,7 +97,8 @@ export function extractIntegrationData(file: VortexFile, config: VortexConfig): 
 	for (const match of file.content.matchAll(intgBlockRegex)) {
 		const { name: header, body } = match.groups!;
 
-		const headerSplit = header!.split("as").map(h => !h.includes("collision") ? h.trim().toLowerCase() : h.trim());
+		const flags: (keyof VortexIntegrationBlockFlags)[] = header!.split("--")[1]?.split(" ").map(f => f.trim()) as (keyof VortexIntegrationBlockFlags)[] ?? [];
+		const headerSplit = header!.split("--")[0]!.split("as").map(h => !h.includes("collision") ? h.trim().toLowerCase() : h.trim());
 		const name = headerSplit[0]!.replace("event", "").replace("ev", "").trim();
 		const eventType = (headerSplit[0]!.endsWith("event") || headerSplit[0]!.endsWith("ev")) ? name : (headerSplit[1] ?? null);
 
@@ -138,14 +140,48 @@ export function extractIntegrationData(file: VortexFile, config: VortexConfig): 
 
 		if (config.debugLevel >= 1)
 			log.debug(`Integration block found: \x1b[34m#[${name}]\x1b[0m in \x1b[33m${file.name}\x1b[0m from \x1b[32m${file.path}\x1b[0m.`);
+		
+		// process flags
+		let processedBody = body.trim();
 
-		blocks.push({
-			name,
-			body: body.trim(),
-			path: "",
-			event,
-			backup: null
-		});
+		if (flags.includes("debug") && config.debugLevel >= 1) 
+			processedBody = "";
+		if ((flags.includes("dev") || flags.includes("development")) && config.production) 
+			processedBody = "";
+		if ((flags.includes("prod") || flags.includes("production")) && !config.production) 
+			processedBody = "";
+		if (flags.includes("skip") || flags.includes("disabled")) 
+			processedBody = "";
+
+		if (config.targetPlatform !== "all") {
+			const platformExclusion = flags.find(f => f.startsWith("!"));
+			
+			if (platformExclusion) {
+				if (platformExclusion.slice(1) === config.targetPlatform)
+					processedBody = "";
+			} 
+			else if (!flags.includes(config.targetPlatform) && !flags.includes("all"))
+				processedBody = "";
+		} 
+
+		const existsBlock = blocks.find(b => b.name === name);
+		if (existsBlock) {
+			existsBlock.body += (existsBlock.body !== "" ? "\n\n" : "") + processedBody;
+			
+			if (flags.find(f => f === "test") && !existsBlock.removeBodies.includes(processedBody))
+				existsBlock.removeBodies.push(processedBody);
+		}
+		else {
+			blocks.push({
+				name,
+				body: processedBody,
+				path: "",
+				event,
+				backup: null,
+				flags: flags,
+				removeBodies: flags.find(f => f === "test") ? [processedBody] : []
+			});
+		}
 	}
 	
 	[...file.content.matchAll(intgRegex)].forEach(match => {

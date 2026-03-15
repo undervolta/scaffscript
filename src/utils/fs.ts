@@ -44,3 +44,4 @@ export async function deleteDir(target: string, root: string) {
 
 	await fs.rm(resolvedTarget, { recursive: true, force: true });
 }
+

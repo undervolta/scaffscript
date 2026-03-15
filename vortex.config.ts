@@ -12,6 +12,7 @@ const config: Partial<VortexConfig> = {
 	path: {
 		"@scr1": "./script1"
 	},
+	targetPlatform: "all",
 	useGmAssetPath: true
 };
 

@@ -1,16 +1,18 @@
 import type { GMEvent } from "./gm-event";
 
 export type VortexConfig = {
-	acceptAllIntegration: boolean;				// accept all generated files to be integrated without manual confirmation (default = false)
-	debugLevel: 0 | 1 | 2;						// debug level (default = 0, 0 = no debug, 1 = basic debug, 2 = verbose debug)
+	acceptAllIntegration: boolean;						// accept all generated files to be integrated without manual confirmation (default = false)
+	counterStart: number;								// starting value for the counter special value (default = 1)
+	debugLevel: 0 | 1 | 2;								// debug level (default = 0, 0 = no debug, 1 = basic debug, 2 = verbose debug)
 	integrationOption: VortexIntegrationOptions;
-	noBackup: boolean;							// don't backup the original files before integration (default = false)
-	noIntegration: boolean;						// don't integrate the files to GM project (default = false)
-	onNotFound: "error" | "ignore";				// what to do when something is not found (default = "error")
-	path: Record<string, string>;				// path aliases (default = {})
-	production: boolean;						// whether the script is running in production mode (default = false)
-	tabType: "1t" | "2s" | "4s";				// tab type to use when generating source code (default = "1t")
-	useGmAssetPath: boolean;					// whether to use GM asset path when integrating files (default = false). asset path: `scripts` and `objects`
+	noBackup: boolean;									// don't backup the original files before integration (default = false)
+	noIntegration: boolean;								// don't integrate the files to GM project (default = false)
+	onNotFound: "error" | "ignore";						// what to do when something is not found (default = "error")
+	path: Record<string, string>;						// path aliases (default = {})
+	production: boolean;								// whether the script is running in production mode (default = false)
+	tabType: "1t" | "2s" | "4s";						// tab type to use when generating source code (default = "1t")
+	targetPlatform: VortexIntegrationTargetPlatform;	// target platform for the generated code (default = "all"). only used for tree-shaking purpose
+	useGmAssetPath: boolean;							// whether to use GM asset path when integrating files (default = false). asset path: `scripts` and `objects`
 };
 
 export type VortexFile = {
@@ -120,7 +122,66 @@ export type VortexIntegrationBlock = {
 	path: string | null;
 	event: GMEvent | null;
 	backup: string | null;
+	flags: (keyof VortexIntegrationBlockFlags)[];
+	removeBodies: string[];
 };
+
+export type VortexIntegrationBlockFlags = Partial<{
+	debug: true;
+	dev: true;
+	development: true;
+	disabled: true;
+	prod: true;
+	production: true;
+	skip: true;
+	test: true;
+} & 
+	Record<VortexIntegrationTargetAllPlatform, true>
+>;
+
+export type VortexIntegrationTargetPlatform =
+	| "all" 
+	| "android"
+	| "gxgames"
+	| "html5"
+	| "ios"
+	| "linux"
+	| "mac"
+	| "ps4"
+	| "ps5"
+	| "reddit"
+	| "switch"
+	| "switch2"
+	| "tvos"
+	| "ubuntu"
+	| "windows"
+	| "xboxone"
+	| "xboxseries"
+;
+
+export type VortexIntegrationTargetPlatformExclusion =
+	| "!android"
+	| "!gxgames"
+	| "!html5"
+	| "!ios"
+	| "!linux"
+	| "!mac"
+	| "!ps4"
+	| "!ps5"
+	| "!reddit"
+	| "!switch"
+	| "!switch2"
+	| "!tvos"
+	| "!ubuntu"
+	| "!windows"
+	| "!xboxone"
+	| "!xboxseries"
+;
+
+export type VortexIntegrationTargetAllPlatform =
+	| VortexIntegrationTargetPlatform 
+	| VortexIntegrationTargetPlatformExclusion
+;
 
 export type VortexIntegration = {
 	path: string;
@@ -138,6 +199,7 @@ export type VortexIntegrationSummary = {
 	backup: string | null;
 	isNew: boolean;				// whether the .yy file of the GM resource is new
 	event: GMEvent | null;
+	toRemoves: string[];
 };
 
 export type VortexIntegrationStore = {

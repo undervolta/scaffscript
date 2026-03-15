@@ -229,10 +229,12 @@ my_method = function() {
 
 | Keyword | Description | Example |
 | --- | --- | --- |
-| `@now` | Replace the statement with the current timestamp in string (ISO 8601). | `var now = @now;` -> `var now = "2021-01-01T00:00:00.000Z";` |
-| `@today` | Replace the statement with the current date in string (ISO 8601). | `var today = @today;` -> `var today = "2021-01-01";` |
-| `@now_dt` | Replace the statement with the current timestamp in datetime. | `var now_dt = @now_dt;` -> `var now_dt = date_create_datetime(2021, 1, 1, 0, 0, 0);` |
-| `@uuid` | Replace the statement with a random UUID in string. | `var uuid = @uuid;` -> `var uuid = "123e4567-e89b-12d3-a456-426614174000";` |
+| `@now` | Replace the statement with the current timestamp in ISO 8601 format. | `var now = "@now";` -> `var now = "2021-01-01T00:00:00.000Z";` |
+| `@today` | Replace the statement with the current date in ISO 8601 format. | `var today = "@today";` -> `var today = "2021-01-01";` |
+| `@version` | Replace the statement with the current version of Vortex. | `var version = "@version";` -> `var version = "0.1.0";` |
+| `@file` | Replace the statement with the current file name. | `var file = "@file";` -> `var file = "my_file";` |
+| `@line` | Replace the statement with the current line number. | `var line = @line;` -> `var line = 1;` |
+| `@counter` | Replace the statement with an increasing number. | `var counter = @counter;` -> `var counter = 1;`, `var counter = @counter;` -> `var counter = 2;`, etc. |
 
 
 ### GameMaker Integration
@@ -249,6 +251,9 @@ show_debug_message("Hello, from my_script!");
 
 #[some_mod]
 show_debug_message("Hello, from my_script (some_mod)!");
+
+#[some_mod -- prod]
+show_debug_message("Hello, only in production!");
 ```
 
 ```js
@@ -277,6 +282,7 @@ show_debug_message("Hello, from my_object keydown - d event!");
 > [!NOTE]
 > If you're using method 2 or 4, the `event` keyword is required to mark the block as an event. 
 > The `event` keyword will be omitted in the block name, so `#[StepEvent]` will become `Step` in the integration block (example: `intg { Step } to "objects/my_object"`, notice no `Event` suffix).
+> If you're creating (not modifying) a new **collision** event, you need to specify the name of the other object (case sensitive, exact name of the object in the IDE, such as `obj_player`). And you need to reopen the IDE if you're creating a new collision event using Vortex integration.
 
 ### Configuration
 

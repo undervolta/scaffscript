@@ -1,7 +1,21 @@
 {
   "name": "vortex-gml",
-  "module": "index.ts",
+  "version": "0.1.0",
+  "description": "A superset language of GML with TypeScript-like module system",
+  "module": "src/index.ts",
+  "main": "dist/index.js",
+  "bin": {
+    "vortex": "dist/index.js"
+  },
   "type": "module",
+  "files": ["dist"],
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target node",
+    "dev": "bun run src/index.ts",
+    "test": "bun test"
+  },
+  "keywords": ["gamemaker", "gml", "vortex", "superset", "module"],
+  "license": "MIT",
   "devDependencies": {
     "@types/bun": "latest"
   },

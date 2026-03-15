@@ -13,6 +13,7 @@ export const modControlRegex =
 export const contentModRegex = /@(?<cmd>content|valueof|typeof|nameof)\s+(?<mod>[A-Za-z0-9_]+)/g;
 export const useModRegex = /@use\s+(?<mod>[A-Za-z0-9_]+)\s+(?<body>\{[.\s\S]+?\})/g;
 export const contentModShortRegex = /@:(?<mod>[A-Za-z0-9_]+)\s*/g;
+export const specialValueRegex = /@(?<cmd>now|today|version|file|line|counter)/g;
 
 export const tabRegex = {
 	oneTab: /^(\t*)/gm,

@@ -78,7 +78,8 @@ export async function generateSourceCode(intgData: VortexIntegration[], config: 
 						content: target.body,
 						backup: null,
 						isNew: false,
-						event: target.event
+						event: target.event,
+						toRemoves: target.removeBodies
 					};
 					generatedCnt++;
 					
@@ -134,7 +135,11 @@ export async function generateSourceCode(intgData: VortexIntegration[], config: 
 					content: body,
 					backup: null,
 					isNew: false,
-					event: null
+					event: null,
+					toRemoves: data.targets.reduce((acc, curr) => {
+						acc.push(...curr.removeBodies);
+						return acc;
+					}, [] as string[])
 				};
 				generatedCnt++;
 				

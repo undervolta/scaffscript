@@ -71,6 +71,11 @@ export async function integrateSourceCodes(genFile: VortexIntegrationStore, conf
 				}
 			}
 
+			for (const rmBody of data.toRemoves) {
+				data.content = data.content.replace(rmBody, "");
+			}
+			data.content = data.content.trim() + "\n";
+
 			await Bun.write(path, data.content);
 			intgCnt++;
 		}));

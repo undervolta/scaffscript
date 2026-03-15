@@ -81,6 +81,7 @@ export async function getVortexConfig(): Promise<VortexConfig> {
 
 	if (!confPath) return {
 		acceptAllIntegration: false,
+		counterStart: 1,
 		debugLevel: 0,
 		integrationOption: {},
 		noBackup: false,
@@ -89,6 +90,7 @@ export async function getVortexConfig(): Promise<VortexConfig> {
 		path: {},
 		production: false,
 		tabType: "1t",
+		targetPlatform: "all",
 		useGmAssetPath: false
 	};
 
@@ -96,6 +98,7 @@ export async function getVortexConfig(): Promise<VortexConfig> {
 
 	return {
 		acceptAllIntegration: conf.acceptAllIntegration ?? false,
+		counterStart: conf.counterStart ?? 1,
 		debugLevel: conf.debugLevel ?? 0,
 		integrationOption: conf.integrationOption ?? {},
 		noBackup: conf.noBackup ?? false,
@@ -104,6 +107,7 @@ export async function getVortexConfig(): Promise<VortexConfig> {
 		path: conf.path ?? {},
 		production: conf.production ?? false,
 		tabType: conf.tabType ?? "1t",
+		targetPlatform: conf.targetPlatform ?? "all",
 		useGmAssetPath: conf.useGmAssetPath ?? false
 	};
 }
