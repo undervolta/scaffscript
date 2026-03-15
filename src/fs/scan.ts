@@ -2,6 +2,7 @@ import { resolvePath, normalizePath, log } from "@/utils";
 import { readdir, exists } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import type { VortexConfig, VortexFile } from "@types";
+import { fsRuntime } from "@runtime";
 
 const conf = await getVortexConfig();
 const DEFAULT_PATH = resolvePath(conf.production ? "src" : "tests");
@@ -11,10 +12,10 @@ const DEFAULT_PATH = resolvePath(conf.production ? "src" : "tests");
  * Get the path to scan from command line arguments or prompt
  * @returns Absolute path to scan
  */
-export function getPath() {
+export async function getPath() {
 	return normalizePath(resolvePath(
 		process.argv[2] ?? 
-		prompt(`\x1b[35m[INPUT]\x1b[0m  Scan path (default: ${DEFAULT_PATH}): `) ?? 
+		await fsRuntime.prompt(`\x1b[35m[INPUT]\x1b[0m  Scan path (default: ${DEFAULT_PATH}): `) ?? 
 		DEFAULT_PATH
 	));
 }

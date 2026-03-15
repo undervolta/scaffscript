@@ -4,6 +4,8 @@ import type {
 	VortexIntegrationStore
 } from "@types";
 
+import { fsRuntime } from "@runtime";
+
 import { 
 	resolvePath, 
 	normalizePath,
@@ -69,7 +71,7 @@ export async function generateSourceCode(intgData: VortexIntegration[], config: 
 					const objectIdx = resvGenPathSplit.findIndex(slug => slug === "objects");
 					const writePath = `${resvGenPathSplit.slice(0, objectIdx+1).join("/")}/${resvGenPathSplit.slice(-1).join("/")}/${outFileName}`;
 
-					await Bun.write(eventFile, target.body + "\n");
+					await fsRuntime.writeText(eventFile, target.body + "\n");
 					data.content[resolvedGenPath] = target.body;
 					target.path = resolvedGenPath;
 					res[writePath] = {
@@ -86,7 +88,7 @@ export async function generateSourceCode(intgData: VortexIntegration[], config: 
 					if (!config.noBackup) {
 						if (await fileExists(writePath)) {
 							try {
-								target.backup = await Bun.file(writePath).text();
+								target.backup = await fsRuntime.readText(writePath);
 								res[writePath].backup = target.backup;
 
 								log.info(`Backup created for \x1b[32m${writePath}\x1b[0m.`);
@@ -104,7 +106,7 @@ export async function generateSourceCode(intgData: VortexIntegration[], config: 
 			}
 
 			if (body !== "") {
-				await Bun.write(outFile, body);
+				await fsRuntime.writeText(outFile, body);
 				generatedCnt++;
 	
 				log.info(`Source code generated for \x1b[34m${outFileSplit.pop()}\x1b[0m in \x1b[32m${outFileSplit.join("/")}\x1b[0m. This file won't be integrated to the GM project due to non-regular GM asset path.`);
@@ -127,7 +129,7 @@ export async function generateSourceCode(intgData: VortexIntegration[], config: 
 				const scriptIdx = resvGenPathSplit.findIndex(slug => slug === "scripts");
 				const writePath = `${resvGenPathSplit.slice(0, scriptIdx+1).join("/")}/${outFileName.replace(".gml", "")}/${outFileName}`;
 
-				await Bun.write(outFile, body);
+				await fsRuntime.writeText(outFile, body);
 				data.content[resolvedGenPath] = body;
 				res[writePath] = {
 					fullPath: resolvedGenPath,
@@ -147,7 +149,7 @@ export async function generateSourceCode(intgData: VortexIntegration[], config: 
 
 					if (await fileExists(writePath)) {
 						try {
-							data.backup = await Bun.file(writePath).text();
+							data.backup = await fsRuntime.readText(writePath);
 							res[writePath].backup = data.backup;
 
 							log.info(`Backup created for \x1b[32m${writePath}\x1b[0m.`);

@@ -20,6 +20,8 @@ import type {
 	VortexModuleInterface
 } from "@types";
 
+import { fsRuntime } from "@runtime";
+
 
 function countTabsBeforeSubstring(str: string, sub: string, tabChar: string): number {
 	const idx = str.indexOf(sub);
@@ -266,7 +268,7 @@ export async function implementModules(module: VortexModuleStore, fileGroup: Vor
 				} else {
 					for (const fileOrPath of mod.files) {
 						if (typeof fileOrPath === "string") {
-							const content = await Bun.file(fileOrPath).text();
+							const content = await fsRuntime.readText(fileOrPath);
 							
 							toReplace += content + "\n\n";
 						} else

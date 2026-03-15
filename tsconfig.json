@@ -30,10 +30,11 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@utils": ["src/utils/index.ts"],
-      "@utils/*": ["src/utils/*"],
+      "@runtime": ["src/runtime/index.ts"],
       "@types": ["types/index.ts"],
-      "@types/*": ["types/*"]
+      "@types/*": ["types/*"],
+      "@utils": ["src/utils/index.ts"],
+      "@utils/*": ["src/utils/*"]
     }
   }
 }

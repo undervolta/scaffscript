@@ -9,7 +9,7 @@ import type { VortexFile, VortexFileGroup, VortexModuleStore } from "@types";
 describe("Process Vortex files", async () => {
 	// assume the config and files are valid (from test 1)
 	const config = await getVortexConfig();
-	const files = await getVortexFiles(getPath());
+	const files = await getVortexFiles(await getPath());
 
 	let res: VortexFileGroup | null = null;
 	let module: VortexModuleStore | null = null;

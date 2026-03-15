@@ -12,7 +12,7 @@ describe("Scan and get Vortex files", async () => {
 	});
 	
 	test("Get Vortex files", async () => {
-		const vFiles = await getVortexFiles(getPath());
+		const vFiles = await getVortexFiles(await getPath());
 
 		console.log(`${JSON.stringify(vFiles, null, 2)}`)
 	

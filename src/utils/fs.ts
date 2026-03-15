@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import { log, resolvePath, relativePath, isAbsolute } from "@utils";
 
+
 /**
  * Clear the output directory
  */
@@ -14,8 +15,12 @@ export async function clearOutDir() {
  * @returns Whether the file exists
  */
 export async function fileExists(path: string): Promise<boolean> {
+	if (typeof Bun !== "undefined") {
+		return Bun.file(path).exists();
+	}
+
 	try {
-		await fs.access(path, fs.constants.F_OK);
+		await fs.access(path);
 		return true;
 	} catch {
 		return false;
@@ -33,7 +38,11 @@ export async function deleteDir(target: string, root: string) {
 
 	const rel = relativePath(resolvedTarget, resolvedRoot);
 
-	if (resolvedTarget === resolvedRoot) {
+	if (!rel || rel === ".") {
+		log.error(`Failed to delete directory \x1b[32m${resolvedTarget}\x1b[0m: Cannot delete root directory.`);
+		return;
+	}
+	else if (resolvedTarget === resolvedRoot) {
 		log.error(`Failed to delete directory \x1b[32m${resolvedTarget}\x1b[0m: Cannot delete root directory.`);
 		return;
 	}

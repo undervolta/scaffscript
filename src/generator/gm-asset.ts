@@ -6,6 +6,8 @@ import {
 	EVENT_TYPE
 } from "@types";
 
+import { fsRuntime } from "@runtime";
+
 import {
 	fileExists,
 	deleteDir
@@ -209,7 +211,7 @@ export async function createGMResource(project: GMProject, filePath: string, int
 			const yyContent = createYYScript(project["%Name"], pathSplit.at(-2)!, intgContent.dirPath, options);
 
 			try {
-				await Bun.write(yyFilePath, yyContent);
+				await fsRuntime.writeText(yyFilePath, yyContent);
 
 				return { type: "scripts", name: pathSplit.at(-2)!, dir: null };
 			} 
@@ -226,7 +228,7 @@ export async function createGMResource(project: GMProject, filePath: string, int
 			);
 
 			try {
-				await Bun.write(yyFilePath, yyContent);
+				await fsRuntime.writeText(yyFilePath, yyContent);
 
 				return { type: "objects", name: pathSplit.at(-2)!, dir: null };
 			} 
@@ -234,7 +236,7 @@ export async function createGMResource(project: GMProject, filePath: string, int
 				console.error(`Failed to create .yy file for ${filePath}: ${error}`);
 			}
 		} else {
-			const yyFileSplit = (await Bun.file(yyFilePath).text()).split("\n");
+			const yyFileSplit = (await fsRuntime.readText(yyFilePath)).split("\n");
 			const eventStartIdx = yyFileSplit.findIndex(line => line.includes("eventList"));
 			const eventEndIdx = yyFileSplit.findIndex((line, idx) => idx > eventStartIdx && line.includes("]"));
 			const existsEvents = yyFileSplit.slice(eventStartIdx + 1, eventEndIdx);
@@ -252,7 +254,7 @@ export async function createGMResource(project: GMProject, filePath: string, int
 				yyFileSplit.splice(eventEndIdx, 0, eventStr);
 				
 				try {
-					await Bun.write(yyFilePath, yyFileSplit.join("\n"));
+					await fsRuntime.writeText(yyFilePath, yyFileSplit.join("\n"));
 				} 
 				catch (error) {
 					console.error(`Failed to modify .yy file for ${filePath}: ${error}`);
@@ -276,8 +278,8 @@ export async function removeGMResource(filePath: string, scanPath: string, intgC
 
 	if (filePath.includes("scripts")) {
 		try {
-			await Bun.file(filePath).delete();
-			await Bun.file(filePath.replace(".gml", ".yy")).delete();
+			await fsRuntime.delete(filePath);
+			await fsRuntime.delete(filePath.replace(".gml", ".yy"));
 	
 			pathSplit.pop();
 			await deleteDir(pathSplit.join("/"), scanPath);
@@ -290,7 +292,7 @@ export async function removeGMResource(filePath: string, scanPath: string, intgC
 	} 
 	else if (filePath.includes("objects")) {
 		try {
-			await Bun.file(filePath).delete();
+			await fsRuntime.delete(filePath);
 			pathSplit.pop();
 
 			if (intgContent.isNew) {
@@ -299,7 +301,7 @@ export async function removeGMResource(filePath: string, scanPath: string, intgC
 			} 
 			else {
 				const yyFilePath = `${pathSplit.join("/")}/${pathSplit.at(-1)!}.yy`;
-				const yyFileSplit = (await Bun.file(yyFilePath).text()).split("\n");
+				const yyFileSplit = (await fsRuntime.readText(yyFilePath)).split("\n");
 				const eventStartIdx = yyFileSplit.findIndex(line => line.includes("eventList"));
 				const eventEndIdx = yyFileSplit.findIndex((line, idx) => idx > eventStartIdx && line.includes("]"));
 				const existsEvents = yyFileSplit.slice(eventStartIdx + 1, eventEndIdx);
@@ -314,7 +316,7 @@ export async function removeGMResource(filePath: string, scanPath: string, intgC
 
 				if (evIdx > -1) {
 					yyFileSplit.splice(eventStartIdx + evIdx + 1, 1);
-					await Bun.write(yyFilePath, yyFileSplit.join("\n"));
+					await fsRuntime.writeText(yyFilePath, yyFileSplit.join("\n"));
 				}
 			}
 		} 
@@ -333,7 +335,7 @@ export async function removeGMResource(filePath: string, scanPath: string, intgC
  * @param folder Folder to add
  */
 export async function modifyYyProject(type: "add" | "remove", projectPath: string, resource: string | string[] | null = null, folder: string | string[] | null = null) {
-	const raw = await Bun.file(projectPath).text();
+	const raw = await fsRuntime.readText(projectPath);
 	const rawLines = raw.split("\n");
 
 	const toAddRescs = (resource !== null && !Array.isArray(resource)) ? [resource] : resource;
@@ -408,7 +410,7 @@ export async function modifyYyProject(type: "add" | "remove", projectPath: strin
 	//console.log(`res: ${res}`);
 
 	try {
-		await Bun.write(projectPath, res);
+		await fsRuntime.writeText(projectPath, res);
 	} 
 	catch (error) {
 		console.error(`Failed to modify project: ${error}`);

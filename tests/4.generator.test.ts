@@ -21,7 +21,7 @@ import type {
 describe("Source Code Generation", async () => {
 	// assume the config and files are valid (from test 1)
 	const config = await getVortexConfig();
-	const files = await getVortexFiles(getPath());
+	const files = await getVortexFiles(await getPath());
 
 	// assume the files already parsed and processed (from test 2)
 	const fileGroup = await readAndSplitFiles(files, config);

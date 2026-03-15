@@ -4,6 +4,8 @@ import type {
 	GMProject
 } from "@types";
 
+import { fsRuntime } from "@runtime";
+
 import { 
 	log, 
 	fileExists,
@@ -41,7 +43,7 @@ export async function integrateSourceCodes(genFile: VortexIntegrationStore, conf
 	}
 
 	const limit = 10;
-	const gmProject = parseGMJson<GMProject>(await Bun.file(projectPath).text());
+	const gmProject = parseGMJson<GMProject>(await fsRuntime.readText(projectPath));
 	const projectPathSplit = projectPath.split("/");
 	const newFolders: string[] = [];
 	const newResources: string[] = [];
@@ -76,7 +78,7 @@ export async function integrateSourceCodes(genFile: VortexIntegrationStore, conf
 			}
 			data.content = data.content.trim() + "\n";
 
-			await Bun.write(path, data.content);
+			await fsRuntime.writeText(path, data.content);
 			intgCnt++;
 		}));
 	}
@@ -93,19 +95,19 @@ export async function integrateSourceCodes(genFile: VortexIntegrationStore, conf
 			const pathSlice = path.split("/");
 
 			if (data.backup) {
-				const restore = (prompt(`---\n\x1b[35m[INPUT]\x1b[0m  Restore file \x1b[34m${pathSlice.pop()}\x1b[0m from \x1b[34m${pathSlice.join("/")}\x1b[0m to the original source code? (y/N) -> `) ?? "n") as "y" | "n";
+				const restore = (await fsRuntime.prompt(`---\n\x1b[35m[INPUT]\x1b[0m  Restore file \x1b[34m${pathSlice.pop()}\x1b[0m from \x1b[34m${pathSlice.join("/")}\x1b[0m to the original source code? (y/N) -> `) ?? "n") as "y" | "n";
 
 				if (restore.toLowerCase() === "y") {
 					intgCnt--;
-					await Bun.write(path, data.backup);
+					await fsRuntime.writeText(path, data.backup);
 
 					log.info(`File \x1b[34m${path}\x1b[0m restored to the original source code.`);
 				}
 			} else {
 				const fileName = pathSlice.pop()!;
 				const remove = (!data.event 
-					? (prompt(`---\n\x1b[35m[INPUT]\x1b[0m  Remove file \x1b[34m${fileName}\x1b[0m from \x1b[34m${pathSlice.join("/")}\x1b[0m? (y/N) -> `) ?? "n")
-					: (prompt(`---\n\x1b[35m[INPUT]\x1b[0m  Remove \x1b[34m${data.event.name + (data.event.numStr ? `\x1b[0m:\x1b[36m${data.event.numStr}\x1b[34m` : "")} Event\x1b[0m from \x1b[34m${pathSlice.join("/")}\x1b[0m? (y/N) -> `) ?? "n")
+					? (await fsRuntime.prompt(`---\n\x1b[35m[INPUT]\x1b[0m  Remove file \x1b[34m${fileName}\x1b[0m from \x1b[34m${pathSlice.join("/")}\x1b[0m? (y/N) -> `) ?? "n")
+					: (await fsRuntime.prompt(`---\n\x1b[35m[INPUT]\x1b[0m  Remove \x1b[34m${data.event.name + (data.event.numStr ? `\x1b[0m:\x1b[36m${data.event.numStr}\x1b[34m` : "")} Event\x1b[0m from \x1b[34m${pathSlice.join("/")}\x1b[0m? (y/N) -> `) ?? "n")
 				) as "y" | "n";
 
 				if (remove.toLowerCase() === "y") {

@@ -1,1 +1,2 @@
-export const runtime = (typeof Bun !== "undefined") ? "bun" : "node";
+export { fsRuntime } from "./adapter";
+export { runtime } from "./detect";

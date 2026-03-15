@@ -2,8 +2,8 @@ include { y, z, STRING, method } from "./script1"
 import * from "./script1"
 
 //intg * to "./tests/Vortex-GML/scripts/MyFolder/Sub/scMyNewScript"
-intg * to "./tests/Vortex-GML/scripts/MyFolder/scMyScript"
-//intg { main, objCreate, coll_player } to "./tests/Vortex-GML/objects/Objects/oSystem"
+//intg * to "./tests/Vortex-GML/scripts/MyFolder/scMyScript"
+intg { main, objCreate, keydown:keyboard_f5 } to "./tests/Vortex-GML/objects/Objects/oSystem"
 //intg { objCreate } to "./tests/Vortex-GML/objects/Objects/Sub/oPlayer2"
 
 #[main -- test]
@@ -23,11 +23,11 @@ show_debug_message($"y = @:y, z = @valueof z, STRING = {@nameof STRING}");
 var inst = new MyClass("John", 20);
 inst.print();
 
-#[main -- android, test]
+#[main -- android test]
 show_debug_message("Hello, from main event (android)!");
 @content STRING
 
-#[objCreate as create -- test]
+#[objCreate as create -- ]
 show_debug_message("Hello, from oSystem create event!");
 
 #[keydown:keyboard_f5 Event]

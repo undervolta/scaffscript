@@ -1,4 +1,5 @@
 import type { VortexConfig, VortexFile, VortexFileGroup } from "@types";
+import { fsRuntime } from "@runtime";
 import { log } from "@/utils";
 import { implRegex, modControlRegex } from "@/parser/regex";
 import { parseSpecialValues } from "@/parser/special-value";
@@ -22,15 +23,15 @@ export async function readAndSplitFiles(files: VortexFile[], config: VortexConfi
 	const counter = { count: config.counterStart }; 
 
 	for (const file of files) {
-		const fileHandle = Bun.file(`${file.path}/${file.name}`);
-
-		file.name = file.name.replace(".v.gml", "");
-		file.content = (await fileHandle.text()).replace(/\r\n/g, "\n");
+		file.content = (await fsRuntime.readText(`${file.path}/${file.name}`)).replace(/\r\n/g, "\n");
 		file.toGenerate = intgRegex.test(file.content);
+		file.name = file.name.replace(".v.gml", "");
 
-		const { content: parsedContent, counter: newCounter } = parseSpecialValues(file, counter);
-		file.content = parsedContent;
-		counter.count = newCounter;
+		if (file.isVortex) {
+			const { content: parsedContent, counter: newCounter } = parseSpecialValues(file, counter);
+			file.content = parsedContent;
+			counter.count = newCounter;
+		}
 
 		// set entries (index files) to always be the last files to be processed
 		if (file.isIndex) {

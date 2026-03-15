@@ -36,7 +36,7 @@ import type {
 describe("Generated Source Code Integration", async () => {
 	// assume the config and files are valid (from test 1)
 	const config = await getVortexConfig();
-	const scanPath = getPath();
+	const scanPath = await getPath();
 	const files = await getVortexFiles(scanPath);
 
 	// assume the files already parsed and processed (from test 2)
