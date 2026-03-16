@@ -131,10 +131,10 @@ export type VortexIntegrationBlockFlags = Partial<{
 	dev: true;
 	development: true;
 	disabled: true;
+	exclude: true;
 	prod: true;
 	production: true;
 	skip: true;
-	test: true;
 } & 
 	Record<VortexIntegrationTargetAllPlatform, true>
 >;

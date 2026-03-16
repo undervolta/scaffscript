@@ -424,8 +424,8 @@ export async function implementModules(module: VortexModuleStore, fileGroup: Vor
 		
 		file.content = file.content.trim() + "\n";
 
-		if (mod.cmd !== "export" && config.debugLevel >= 2) 
-			log.debug(`Content of '${file.name}' after \x1b[36m${mod.cmd}\x1b[0m:\n${file.content}`);
+		//if (mod.cmd !== "export" && config.debugLevel >= 2) 
+		//	log.debug(`Content of '${file.name}' after \x1b[36m${mod.cmd}\x1b[0m:\n${file.content}`);
 	}
 
 	return mods;

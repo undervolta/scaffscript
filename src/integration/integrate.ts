@@ -33,7 +33,7 @@ export async function integrateSourceCodes(genFile: VortexIntegrationStore, conf
 	const integrations = Object.entries(genFile);
 
 	if (integrations.length <= 0) 
-		return null;
+		return 0;
 
 	projectPath = normalizePath(resolvePath(projectPath));
 
@@ -49,20 +49,21 @@ export async function integrateSourceCodes(genFile: VortexIntegrationStore, conf
 	const newResources: string[] = [];
 	let intgCnt = 0;
 
-	log.info(`Integrating generated source codes to \x1b[34m${projectPathSplit.pop()?.replace(".yyp", "")}\x1b[0m project...`);
+	log.debug(`Integrating generated source codes to \x1b[34m${projectPathSplit.pop()?.replace(".yyp", "")}\x1b[0m project...`);
 
 	for (let i = 0; i < integrations.length; i += limit) {
 		const batch = integrations.slice(i, i + limit);
 
 		await Promise.all(batch.map(async intg => {
 			const [path, data] = intg;
+			const relPath = path.split("/").slice(-3).join("/");
 			const isExists = await fileExists(path);
 
 			if (isExists) {
-				log.info(`Updating \x1b[32m${path}\x1b[0m...`);
+				log.debug(`Updating \x1b[32m${relPath}\x1b[0m...`);
 			} 
 			else {
-				log.info(`File \x1b[32m${path}\x1b[0m not found. Creating new resource...`);
+				log.debug(`File \x1b[32m${relPath}\x1b[0m not found. Creating new resource...`);
 				
 				const { type, name } = await createGMResource(gmProject, path, data, config.integrationOption);
 
@@ -89,25 +90,33 @@ export async function integrateSourceCodes(genFile: VortexIntegrationStore, conf
 		await modifyYyProject("add", projectPath, newResources, newFolders);
 
 	if (!config.acceptAllIntegration) {
+		console.log("---");
+		log.info(`\x1b[34macceptAllIntegration\x1b[0m flag is set to \x1b[33mfalse\x1b[0m in the \x1b[32mvortex.config.ts\x1b[0m. Please review the generated source codes before integrating.`);
+
 		const deleteResources: string[] = [];
 
 		for (const [path, data] of integrations) {
 			const pathSlice = path.split("/");
+			const fileName = pathSlice.pop()!;
+			const relPath2 = pathSlice.slice(-2).join("/");
+			const relPath3 = pathSlice.slice(-3).join("/");
 
 			if (data.backup) {
-				const restore = (await fsRuntime.prompt(`---\n\x1b[35m[INPUT]\x1b[0m  Restore file \x1b[34m${pathSlice.pop()}\x1b[0m from \x1b[34m${pathSlice.join("/")}\x1b[0m to the original source code? (y/N) -> `) ?? "n") as "y" | "n";
+				const restore = (!data.event 
+					? (await fsRuntime.prompt(`---\n\x1b[35m[INPUT]\x1b[0m  Revert file \x1b[34m${fileName}\x1b[0m from \x1b[32m${relPath2}\x1b[0m? (y/N) -> `) ?? "n")
+					: (await fsRuntime.prompt(`---\n\x1b[35m[INPUT]\x1b[0m  Revert \x1b[34m${data.event.name + (data.event.numStr ? `\x1b[0m:\x1b[36m${data.event.numStr}\x1b[34m` : "")} Event\x1b[0m from \x1b[32m${relPath2}\x1b[0m? (y/N) -> `) ?? "n")
+				) as "y" | "n";
 
 				if (restore.toLowerCase() === "y") {
 					intgCnt--;
 					await fsRuntime.writeText(path, data.backup);
 
-					log.info(`File \x1b[34m${path}\x1b[0m restored to the original source code.`);
+					log.debug(`File \x1b[34m${relPath3}\x1b[0m restored to the original source code.`);
 				}
 			} else {
-				const fileName = pathSlice.pop()!;
 				const remove = (!data.event 
-					? (await fsRuntime.prompt(`---\n\x1b[35m[INPUT]\x1b[0m  Remove file \x1b[34m${fileName}\x1b[0m from \x1b[34m${pathSlice.join("/")}\x1b[0m? (y/N) -> `) ?? "n")
-					: (await fsRuntime.prompt(`---\n\x1b[35m[INPUT]\x1b[0m  Remove \x1b[34m${data.event.name + (data.event.numStr ? `\x1b[0m:\x1b[36m${data.event.numStr}\x1b[34m` : "")} Event\x1b[0m from \x1b[34m${pathSlice.join("/")}\x1b[0m? (y/N) -> `) ?? "n")
+					? (await fsRuntime.prompt(`---\n\x1b[35m[INPUT]\x1b[0m  Remove file \x1b[34m${fileName}\x1b[0m from \x1b[32m${relPath2}\x1b[0m? (y/N) -> `) ?? "n")
+					: (await fsRuntime.prompt(`---\n\x1b[35m[INPUT]\x1b[0m  Remove \x1b[34m${data.event.name + (data.event.numStr ? `\x1b[0m:\x1b[36m${data.event.numStr}\x1b[34m` : "")} Event\x1b[0m from \x1b[32m${relPath2}\x1b[0m? (y/N) -> `) ?? "n")
 				) as "y" | "n";
 
 				if (remove.toLowerCase() === "y") {
@@ -118,7 +127,7 @@ export async function integrateSourceCodes(genFile: VortexIntegrationStore, conf
 						deleteResources.push(`${type},${name},${data.dirPath}`);
 					}
 
-					log.info(`File \x1b[34m${path}\x1b[0m removed from the project.`);
+					log.debug(`File \x1b[34m${relPath3}\x1b[0m removed from the project.`);
 				}
 			}
 		}
@@ -127,6 +136,7 @@ export async function integrateSourceCodes(genFile: VortexIntegrationStore, conf
 			await modifyYyProject("remove", projectPath, deleteResources);
 	}
 
+	console.log("---");
 	log.info(`All source codes integrated successfully. Integrated \x1b[32m${intgCnt}\x1b[0m file(s).`);
 	//console.log(`Summaries: ${JSON.stringify(integrations, null, 2)}`);
 	

@@ -168,7 +168,7 @@ export function extractIntegrationData(file: VortexFile, config: VortexConfig): 
 		if (existsBlock) {
 			existsBlock.body += (existsBlock.body !== "" ? "\n\n" : "") + processedBody;
 			
-			if (flags.find(f => f === "test") && !existsBlock.removeBodies.includes(processedBody))
+			if (flags.find(f => f === "exclude") && !existsBlock.removeBodies.includes(processedBody))
 				existsBlock.removeBodies.push(processedBody);
 		}
 		else {
@@ -179,7 +179,7 @@ export function extractIntegrationData(file: VortexFile, config: VortexConfig): 
 				event,
 				backup: null,
 				flags: flags,
-				removeBodies: flags.find(f => f === "test") ? [processedBody] : []
+				removeBodies: flags.find(f => f === "exclude") ? [processedBody] : []
 			});
 		}
 	}

@@ -3,14 +3,14 @@
   "version": "0.1.0",
   "description": "A superset language of GML with TypeScript-like module system",
   "module": "src/index.ts",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
   "bin": {
-    "vortex": "dist/index.js"
+    "vgml": "dist/index.cjs"
   },
   "type": "module",
   "files": ["dist"],
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist --target node",
+    "build": "bun build src/index.ts --outfile dist/index.cjs --target node --format cjs",
     "dev": "bun run src/index.ts",
     "test": "bun test"
   },

@@ -1,19 +1,22 @@
-import { resolvePath, normalizePath, log } from "@/utils";
-import { readdir, exists } from "node:fs/promises";
+import { resolvePath, normalizePath, log, fileExists } from "@/utils";
+import { readdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
+import { pathToFileURL } from "node:url";
 import type { VortexConfig, VortexFile } from "@types";
 import { fsRuntime } from "@runtime";
 
-const conf = await getVortexConfig();
-const DEFAULT_PATH = resolvePath(conf.production ? "src" : "tests");
+//const conf = await getVortexConfig();
+//const DEFAULT_PATH = resolvePath(conf.production ? "src" : "tests");
+const DEFAULT_PATH = resolvePath("src");
 
 
 /**
  * Get the path to scan from command line arguments or prompt
+ * @param path Path override
  * @returns Absolute path to scan
  */
-export async function getPath() {
-	return normalizePath(resolvePath(
+export async function getPath(path?: string) {
+	return path ?? normalizePath(resolvePath(
 		process.argv[2] ?? 
 		await fsRuntime.prompt(`\x1b[35m[INPUT]\x1b[0m  Scan path (default: ${DEFAULT_PATH}): `) ?? 
 		DEFAULT_PATH
@@ -31,14 +34,14 @@ export async function findConfig(filename: string) {
 	while (true) {
 		const full = join(dir, filename);
 
-		if (await exists(full)) {
+		if (await fileExists(full)) {
 			return full;
 		}
 
 		const parent = dirname(dir);
 
 		if (parent === dir) {
-			return null; 			// reached filesystem root
+			return null; 		// reached filesystem root
 		}
 
 		dir = parent;
@@ -51,7 +54,7 @@ export async function findConfig(filename: string) {
  * @returns Array of VortexFile
  */
 export async function getVortexFiles(path: string): Promise<VortexFile[]> {
-	log.info(`Scanning for \x1b[34m.v.gml\x1b[0m and \x1b[34m.gml\x1b[0m files in \x1b[32m${path}\x1b[0m...`);
+	log.debug(`Scanning for \x1b[34m*.v.gml\x1b[0m and \x1b[34m*.gml\x1b[0m files in \x1b[32m${path}\x1b[0m...`);
 	const files = await readdir(path, { withFileTypes: true, recursive: true });
 
 	const vFiles = files
@@ -68,7 +71,7 @@ export async function getVortexFiles(path: string): Promise<VortexFile[]> {
 			};
 		});
 
-	log.info(`Found \x1b[32m${vFiles.filter(file => file.isVortex).length} \x1b[34m.v.gml\x1b[0m file(s) and \x1b[32m${vFiles.filter(file => !file.isVortex).length}\x1b[0m \x1b[34m.gml\x1b[0m file(s).`);
+	log.info(`Found \x1b[32m${vFiles.filter(file => file.isVortex).length} \x1b[34m*.v.gml\x1b[0m file(s) and \x1b[32m${vFiles.filter(file => !file.isVortex).length}\x1b[0m \x1b[34m*.gml\x1b[0m file(s).`);
 
 	return vFiles;
 }
@@ -95,7 +98,7 @@ export async function getVortexConfig(): Promise<VortexConfig> {
 		useGmAssetPath: false
 	};
 
-	const conf = (await import(confPath)).default;
+	const conf = (await import(pathToFileURL(confPath).href)).default;
 
 	return {
 		acceptAllIntegration: conf.acceptAllIntegration ?? false,

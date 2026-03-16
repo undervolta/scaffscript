@@ -19,6 +19,10 @@ export const NodeRuntime: RuntimeFS = {
 
 	async writeText(path, data) {
 		await ensureModules();
+
+		const { dirname } = await import("node:path");
+    	await fs.mkdir(dirname(path), { recursive: true });
+		
 		await fs.writeFile(path, data, "utf8");
 	},
 

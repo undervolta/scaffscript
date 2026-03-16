@@ -1,3 +1,4 @@
 export * from "./vortex";
 export * from "./gm-event";
 export * from "./gm-project";
+export * from "./cli";

@@ -1,13 +1,127 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 
-import { resolvePath } from "./utils";
-import { getPath } from "./fs";
+import { parseArgs } from "@/cli";
+import { log, resolvePath } from "@/utils";
+
+import { 
+	getVortexFiles, 
+	getVortexConfig, 
+	readAndSplitFiles 
+} from "@/fs";
+
+import { 
+	getExportedModules, implementClass,
+	implementModules
+} from "@/parser";
+
+import { 
+	extractIntegrationData,
+	generateSourceCode
+} from "@/generator";
+
+import {
+	integrateSourceCodes
+} from "@/integration";
+
+import type { 
+	VortexModuleUsage,
+	VortexIntegration
+} from "@types";
 
 
-console.log(getPath());
+/**
+ * Main function
+ */
+async function main() {
+	const args = process.argv.slice(2);
+	const input = await parseArgs(...args);
 
-const file = Bun.file(resolvePath("tests/test.gml"));
-const content = await file.text();
-console.log(content);
+	if (!input) return;
+	
+	switch (input.cmd) {
+		case "generate":
+			// get config and files
+			log.debug("Getting Vortex config...");
+			const config = await getVortexConfig();
+			const files = await getVortexFiles(resolvePath(input.scanPath));
 
-Bun.write(resolvePath("../.out/test.gml"), content);
+			// process files
+			log.debug("Processing files...");
+			const fileGroup = await readAndSplitFiles(files, config);
+			if (!fileGroup) {
+				log.error("Failed to process files. Aborting...");
+				return;
+			}
+			log.debug("Files processed successfully.");
+
+			// get exported modules
+			log.debug("Getting exported modules...");
+			const module = getExportedModules(fileGroup, config);
+			log.debug("Exported modules retrieved successfully.");
+
+			// implement classes
+			log.debug("Implementing classes...");
+			const implValid = implementClass(module, fileGroup, config);
+			if (!implValid) return;
+			log.debug("Classes implemented successfully.");
+
+			// implement modules
+			log.debug("Implementing modules...");
+			const implMods: (VortexModuleUsage[] | null)[] = []; 
+			for (const file of files) {
+				const mod = await implementModules(module, fileGroup, file, config);
+				implMods.push(mod);
+			}
+
+			if (implMods && implMods.length && 
+				implMods.every(modUsage => modUsage && (modUsage.length === 0 || (modUsage.length && 
+					modUsage.every(mm => mm && mm.cmd))
+				))) 
+			{
+				log.debug("Modules implemented successfully.");
+			} 
+			else {
+				log.error("Failed to implement modules. Aborting...");
+				return;
+			}
+
+			// extract integration data
+			log.debug("Extracting integration data...");
+			const intgData = fileGroup.generate.reduce<VortexIntegration[]>((acc, file) => {
+				const data = extractIntegrationData(file, config);
+
+				if (data) 
+					acc.push(...data);
+
+				return acc;
+			}, []);
+			log.debug("Integration data extracted successfully.");
+
+			// generate source code
+			const genFiles = await generateSourceCode(intgData, config);
+
+			// integrate source code
+			if (!config.noIntegration) {
+				log.debug("Integrating source code...");
+				const modified = await integrateSourceCodes(genFiles, config, resolvePath(input.projectPath));
+
+				if (modified === 0) {
+					log.debug("No source code integrated.");
+					console.log("---");
+					log.info('Program executed successfully. Thanks for using Vortex-GML!');
+					return;
+				} 
+				else if (modified === null) {
+					log.error("Failed to integrate source code. Aborting...");
+					return;
+				}
+			}
+			else {
+				console.log("---");
+				log.info('\x1b[34mnoIntegration\x1b[0m flag is set to \x1b[33mtrue\x1b[0m in the \x1b[32mvortex.config.ts\x1b[0m. No source code will be integrated. Thanks for using Vortex-GML!');
+			}
+		break;
+	}
+}
+
+main();

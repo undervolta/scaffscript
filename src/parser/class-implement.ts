@@ -94,10 +94,10 @@ export function implementClass(module: VortexModuleStore, fileGroup: VortexFileG
 			file.childs.forEach(child => toImpl.push({ parent: file, file: child }));
 	}
 
-	if (toImpl.length == 0) {
+	/*if (toImpl.length == 0) {
 		log.warn("No files to implement classes from.");
 		return false;
-	}
+	}*/
 
 	for (const fileImpl of toImpl) {
 		const filePath = fileImpl.parent.isIndex ? fileImpl.parent.path : `${fileImpl.parent.path}/${fileImpl.parent.name}`;

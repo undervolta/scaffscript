@@ -1,4 +1,5 @@
 import fs from "fs/promises";
+import { constants } from "fs";
 import { log, resolvePath, relativePath, isAbsolute } from "@utils";
 
 
@@ -20,7 +21,7 @@ export async function fileExists(path: string): Promise<boolean> {
 	}
 
 	try {
-		await fs.access(path);
+		await fs.access(path, constants.R_OK);
 		return true;
 	} catch {
 		return false;
