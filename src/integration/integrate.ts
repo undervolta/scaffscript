@@ -1,6 +1,6 @@
 import type {
-	VortexConfig,
-	VortexIntegrationStore,
+	ScaffConfig,
+	ScaffIntegrationStore,
 	GMProject
 } from "@types";
 
@@ -25,11 +25,11 @@ import {
 /**
  * Integrate generated source code to GameMaker project
  * @param genFile Array of integration data
- * @param config Vortex config
+ * @param config Scaff config
  * @param projectPath Path to the GM project
  * @returns Number of files integrated successfully
  */
-export async function integrateSourceCodes(genFile: VortexIntegrationStore, config: VortexConfig, projectPath: string) {
+export async function integrateSourceCodes(genFile: ScaffIntegrationStore, config: ScaffConfig, projectPath: string) {
 	const integrations = Object.entries(genFile);
 
 	if (integrations.length <= 0) 
@@ -91,7 +91,7 @@ export async function integrateSourceCodes(genFile: VortexIntegrationStore, conf
 
 	if (!config.acceptAllIntegration) {
 		console.log("---");
-		log.info(`\x1b[34macceptAllIntegration\x1b[0m flag is set to \x1b[33mfalse\x1b[0m in the \x1b[32mvortex.config.ts\x1b[0m. Please review the generated source codes before integrating.`);
+		log.info(`\x1b[34macceptAllIntegration\x1b[0m flag is set to \x1b[33mfalse\x1b[0m in the \x1b[32mscaff.config.ts\x1b[0m. Please review the generated source codes before integrating.`);
 
 		const deleteResources: string[] = [];
 

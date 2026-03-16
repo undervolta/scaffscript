@@ -1,18 +1,18 @@
 import { expect, test, describe } from "bun:test";
 
-import { getPath, getVortexFiles, getVortexConfig } from "@/fs";
+import { getPath, getScaffFiles, getScaffConfig } from "@/fs";
 import { readAndSplitFiles } from "@/fs/grouping";
 import { 
 	getExportedModules, implementClass,
 	getModuleUsage, implementModules 
 } from "@/parser";
 
-import type { VortexModuleUsage } from "@types";
+import type { ScaffModuleUsage } from "@types";
 
 describe("Module Implementation", async () => {
 	// assume the config and files are valid (from test 1)
-	const config = await getVortexConfig();
-	const files = await getVortexFiles(await getPath());
+	const config = await getScaffConfig();
+	const files = await getScaffFiles(await getPath());
 
 	// assume the files already parsed and processed (from test 2)
 	const fileGroup = await readAndSplitFiles(files, config);
@@ -22,7 +22,7 @@ describe("Module Implementation", async () => {
 	const valid = implementClass(module, fileGroup, config);
 	if (!valid) return;
 
-	let exportMods: VortexModuleUsage[] | null = null;
+	let exportMods: ScaffModuleUsage[] | null = null;
 
 	test.skip("Get used modules", async () => {
 		exportMods = await getModuleUsage(module, fileGroup, files.find(f => f.name === "exporter")!, config);
@@ -49,7 +49,7 @@ describe("Module Implementation", async () => {
 	});
 
 	test("Implement modules in all files", async () => {
-		const implMods: (VortexModuleUsage[] | null)[] = []; 
+		const implMods: (ScaffModuleUsage[] | null)[] = []; 
 
 		for (const file of files) {
 			const mod = await implementModules(module, fileGroup, file, config);

@@ -2,12 +2,20 @@ import { resolvePath, normalizePath, log, fileExists } from "@/utils";
 import { readdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { pathToFileURL } from "node:url";
-import type { VortexConfig, VortexFile } from "@types";
+import type { ScaffConfig, ScaffFile } from "@types";
 import { fsRuntime } from "@runtime";
 
-//const conf = await getVortexConfig();
+//const conf = await getScaffConfig();
 //const DEFAULT_PATH = resolvePath(conf.production ? "src" : "tests");
 const DEFAULT_PATH = resolvePath("src");
+
+const CONFIG_FILES = [
+	"scaff.config.ts",
+	"scaff.config.mjs",
+	"scaff.config.js",
+	"scaff.config.cjs",
+	"scaff.config.json",
+];
 
 
 /**
@@ -49,59 +57,82 @@ export async function findConfig(filename: string) {
 }
 
 /**
- * Get all VortexFiles from the given path
+ * Get all ScaffFiles from the given path
  * @param path Path to scan
- * @returns Array of VortexFile
+ * @returns Array of ScaffFile
  */
-export async function getVortexFiles(path: string): Promise<VortexFile[]> {
-	log.debug(`Scanning for \x1b[34m*.v.gml\x1b[0m and \x1b[34m*.gml\x1b[0m files in \x1b[32m${path}\x1b[0m...`);
+export async function getScaffFiles(path: string): Promise<ScaffFile[]> {
+	log.debug(`Scanning for \x1b[34m*.ss\x1b[0m and \x1b[34m*.gml\x1b[0m files in \x1b[32m${path}\x1b[0m...`);
 	const files = await readdir(path, { withFileTypes: true, recursive: true });
 
 	const vFiles = files
-		.filter(file => file.isFile() && file.name.endsWith(".gml"))
+		.filter(file => file.isFile() && (file.name.endsWith(".ss") || file.name.endsWith(".gml")))
 		.map(file => {
 			return {
 				name: file.name,
 				path: normalizePath(resolvePath(file.parentPath)),
-				isVortex: file.name.endsWith(".v.gml"),
-				isIndex: file.name === "index.v.gml",
+				isScaff: file.name.endsWith(".ss"),
+				isIndex: file.name === "index.ss",
 				toGenerate: false,
 				content: "",
 				childs: []
 			};
 		});
 
-	log.info(`Found \x1b[32m${vFiles.filter(file => file.isVortex).length} \x1b[34m*.v.gml\x1b[0m file(s) and \x1b[32m${vFiles.filter(file => !file.isVortex).length}\x1b[0m \x1b[34m*.gml\x1b[0m file(s).`);
+	log.info(`Found \x1b[32m${vFiles.filter(file => file.isScaff).length} \x1b[34m*.ss\x1b[0m file(s) and \x1b[32m${vFiles.filter(file => !file.isScaff).length}\x1b[0m \x1b[34m*.gml\x1b[0m file(s).`);
 
 	return vFiles;
 }
 
 /**
- * Get the Vortex configuration
- * @returns VortexConfig
+ * Get the Scaff configuration
+ * @returns ScaffConfig
  */
-export async function getVortexConfig(): Promise<VortexConfig> {
-	const confPath = await findConfig("vortex.config.ts");
+export async function getScaffConfig(): Promise<ScaffConfig> {
+	let confPath: string | null = null;
 
-	if (!confPath) return {
-		acceptAllIntegration: false,
-		counterStart: 1,
-		debugLevel: 0,
-		integrationOption: {},
-		noBackup: false,
-		noIntegration: false,
-		onNotFound: "error",
-		path: {},
-		production: false,
-		tabType: "1t",
-		targetPlatform: "all",
-		useGmAssetPath: false
-	};
+	// search config files
+	for (const name of CONFIG_FILES) {
+		confPath = await findConfig(name);
 
-	const conf = (await import(pathToFileURL(confPath).href)).default;
+		if (confPath) break;
+	}
+
+	let conf: Partial<ScaffConfig> = {};
+
+	// load file config
+	if (confPath) {
+		const ext = confPath.split(".").pop();
+
+		if (ext === "cjs" || ext === "json") {
+			conf = require(confPath);
+		} else {
+			const mod = await import(pathToFileURL(confPath).href);
+			conf = mod.default ?? mod;
+		}
+	}
+
+	// fallback to package.json config
+	if (!confPath) {
+		const pkgPath = await findConfig("package.json");
+
+		if (pkgPath) {
+			try {
+				const raw = await fsRuntime.readText(pkgPath);
+				const pkg = JSON.parse(raw);
+
+				if (pkg.mycli) {
+					conf = pkg.mycli;
+				}
+			} catch {
+				// ignore invalid package.json
+			}
+		}
+	}
 
 	return {
 		acceptAllIntegration: conf.acceptAllIntegration ?? false,
+		clearOutputDir: conf.clearOutputDir ?? false,
 		counterStart: conf.counterStart ?? 1,
 		debugLevel: conf.debugLevel ?? 0,
 		integrationOption: conf.integrationOption ?? {},

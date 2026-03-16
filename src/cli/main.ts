@@ -2,8 +2,8 @@ import { parseArgs } from "@/cli";
 import { log, resolvePath } from "@/utils";
 
 import { 
-	getVortexFiles, 
-	getVortexConfig, 
+	getScaffFiles, 
+	getScaffConfig, 
 	readAndSplitFiles 
 } from "@/fs";
 
@@ -22,8 +22,8 @@ import {
 } from "@/integration";
 
 import type { 
-	VortexModuleUsage,
-	VortexIntegration
+	ScaffModuleUsage,
+	ScaffIntegration
 } from "@types";
 
 
@@ -40,9 +40,9 @@ export async function main() {
 	switch (input.cmd) {
 		case "generate":
 			// get config and files
-			log.debug("Getting Vortex config...");
-			const config = await getVortexConfig();
-			const files = await getVortexFiles(resolvePath(input.scanPath));
+			log.debug("Getting Scaff config...");
+			const config = await getScaffConfig();
+			const files = await getScaffFiles(resolvePath(input.scanPath));
 
 			// process files
 			log.debug("Processing files...");
@@ -66,7 +66,7 @@ export async function main() {
 
 			// implement modules
 			log.debug("Implementing modules...");
-			const implMods: (VortexModuleUsage[] | null)[] = []; 
+			const implMods: (ScaffModuleUsage[] | null)[] = []; 
 			for (const file of files) {
 				const mod = await implementModules(module, fileGroup, file, config);
 				implMods.push(mod);
@@ -86,7 +86,7 @@ export async function main() {
 
 			// extract integration data
 			log.debug("Extracting integration data...");
-			const intgData = fileGroup.generate.reduce<VortexIntegration[]>((acc, file) => {
+			const intgData = fileGroup.generate.reduce<ScaffIntegration[]>((acc, file) => {
 				const data = extractIntegrationData(file, config);
 
 				if (data) 
@@ -97,12 +97,12 @@ export async function main() {
 			log.debug("Integration data extracted successfully.");
 
 			// generate source code
-			const genFiles = await generateSourceCode(intgData, config);
+			const genFiles = await generateSourceCode(intgData, config, input.projectPath);
 
 			// integrate source code
 			if (!config.noIntegration) {
 				log.debug("Integrating source code...");
-				const modified = await integrateSourceCodes(genFiles, config, resolvePath(input.projectPath));
+				const modified = await integrateSourceCodes(genFiles, config, input.projectPath);
 
 				if (modified === null) {
 					log.error("Failed to integrate source code. Aborting...");
@@ -111,15 +111,15 @@ export async function main() {
 				else if (modified === 0) {
 					log.debug("No source code integrated.");
 					console.log("---");
-					log.info('Program executed successfully. Thanks for using Vortex-GML!');
+					log.info('Program executed successfully. Thanks for using ScaffScript!');
 					return;
 				} 
 				else
-					log.info('Program executed successfully. Thanks for using Vortex-GML!');
+					log.info('Program executed successfully. Thanks for using ScaffScript!');
 			}
 			else {
 				console.log("---");
-				log.info('\x1b[34mnoIntegration\x1b[0m flag is set to \x1b[33mtrue\x1b[0m in the \x1b[32mvortex.config.ts\x1b[0m. No source code will be integrated. Thanks for using Vortex-GML!');
+				log.info('\x1b[34mnoIntegration\x1b[0m flag is set to \x1b[33mtrue\x1b[0m in the \x1b[32mscaff.config.ts\x1b[0m. No source code will be integrated. Thanks for using ScaffScript!');
 			}
 
 			console.log("");

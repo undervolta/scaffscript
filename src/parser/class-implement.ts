@@ -1,8 +1,8 @@
 import type {
-	VortexConfig,
-	VortexFile,
-	VortexFileGroup,
-	VortexModuleStore
+	ScaffConfig,
+	ScaffFile,
+	ScaffFileGroup,
+	ScaffModuleStore
 } from "@types";
 
 import { log } from "@/utils";
@@ -74,17 +74,17 @@ export function parseHeader(str: string, regex: RegExp = implHeaderRegex) {
 /**
  * Implement the classes in the given files
  * @param module Object with all exported modules
- * @param files Object with `vortex` and `generate` properties, each containing an array of files
+ * @param files Object with `scaff` and `generate` properties, each containing an array of files
  */
-export function implementClass(module: VortexModuleStore, fileGroup: VortexFileGroup, config: VortexConfig) {
-	if (fileGroup.generate.length == 0 && fileGroup.vortex.length == 0) {
+export function implementClass(module: ScaffModuleStore, fileGroup: ScaffFileGroup, config: ScaffConfig) {
+	if (fileGroup.generate.length == 0 && fileGroup.scaff.length == 0) {
 		log.warn("No files to implement classes from.");
 		return false;
 	}
 
-	const toImpl: { parent: VortexFile; file: VortexFile }[] = [];
+	const toImpl: { parent: ScaffFile; file: ScaffFile }[] = [];
 
-	for (const file of fileGroup.vortex) {
+	for (const file of fileGroup.scaff) {
 		if (file.childs.length > 0)
 			file.childs.forEach(child => toImpl.push({ parent: file, file: child }));
 	}

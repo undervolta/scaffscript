@@ -1,11 +1,10 @@
 {
-  "name": "vortex-gml",
-  "version": "0.1.0",
+  "name": "scaffscript",
+  "version": "0.1.1",
   "description": "A superset language of GML with TypeScript-like module system",
-  "module": "src/index-node.ts",
   "main": "dist/index.cjs",
   "bin": {
-    "vgml": "dist/index.cjs"
+    "scaff": "./dist/index.cjs"
   },
   "type": "module",
   "files": ["dist"],
@@ -16,7 +15,7 @@
     "build:all": "bun run build:node && bun run build:bun",
     "dev": "bun run src/index-node.ts"
   },
-  "keywords": ["gamemaker", "gml", "vortex", "superset", "module"],
+  "keywords": ["gamemaker", "gml", "scaff", "script", "superset", "module", "cli"],
   "license": "MIT",
   "devDependencies": {
     "@types/bun": "latest"

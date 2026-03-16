@@ -1,8 +1,8 @@
 import {
 	type GMProject,
 	type GMResourceHandle,
-	type VortexIntegrationSummary,
-	type VortexIntegrationOptions,
+	type ScaffIntegrationSummary,
+	type ScaffIntegrationOptions,
 	EVENT_TYPE
 } from "@types";
 
@@ -80,7 +80,7 @@ function stripTrailingCommas(input: string): string {
  * @param options Integration options
  * @returns YY script string
  */
-function createYYScript(projectYyp: string, rescName: string, dir: string, options?: VortexIntegrationOptions) {
+function createYYScript(projectYyp: string, rescName: string, dir: string, options?: ScaffIntegrationOptions) {
 	const dirSplit = dir.split("/");
 
 	return `{
@@ -107,7 +107,7 @@ function createYYScript(projectYyp: string, rescName: string, dir: string, optio
  * @param options Integration options
  * @returns YY object string
  */
-function createYYObject(projectYyp: string, rescName: string, dir: string, eventList?: string[], options?: VortexIntegrationOptions) {
+function createYYObject(projectYyp: string, rescName: string, dir: string, eventList?: string[], options?: ScaffIntegrationOptions) {
 	const dirSplit = dir.split("/");
 	const eventStr = eventList?.join("\n") ?? null;
 
@@ -189,7 +189,7 @@ export function createGMResourceStr(type: "scripts" | "objects", name: string) {
  * @param options Integration options
  * @returns GM event string
  */
-export function createGMEventStr(eventType: EVENT_TYPE, eventNum: number | string | null, options?: VortexIntegrationOptions) {
+export function createGMEventStr(eventType: EVENT_TYPE, eventNum: number | string | null, options?: ScaffIntegrationOptions) {
 	return `    {"$GMEvent":"v1","%Name":"",${eventNum !== null ? `"collisionObjectId":${typeof eventNum === "string" ? eventNum : null},` : ""}"eventNum":${typeof eventNum === "number" ? eventNum : 0},"eventType":${eventType},"isDnD":${options?.isDnd ?? false},"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},`;
 }
 
@@ -201,7 +201,7 @@ export function createGMEventStr(eventType: EVENT_TYPE, eventNum: number | strin
  * @param options Integration options
  * @returns Resource handle
  */
-export async function createGMResource(project: GMProject, filePath: string, intgContent: VortexIntegrationSummary, options?: VortexIntegrationOptions): Promise<GMResourceHandle> {
+export async function createGMResource(project: GMProject, filePath: string, intgContent: ScaffIntegrationSummary, options?: ScaffIntegrationOptions): Promise<GMResourceHandle> {
 	const pathSplit = filePath.split("/");
 
 	if (filePath.includes("scripts")) {
@@ -273,7 +273,7 @@ export async function createGMResource(project: GMProject, filePath: string, int
  * @param intgContent Integration content
  * @returns Resource handle
  */
-export async function removeGMResource(filePath: string, scanPath: string, intgContent: VortexIntegrationSummary): Promise<GMResourceHandle> {
+export async function removeGMResource(filePath: string, scanPath: string, intgContent: ScaffIntegrationSummary): Promise<GMResourceHandle> {
 	const pathSplit = filePath.split("/");
 
 	if (filePath.includes("scripts")) {

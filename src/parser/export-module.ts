@@ -1,10 +1,10 @@
 import type { 
-	VortexConfig,
-	VortexFileGroup, 
-	VortexModuleStore,
-	VortexModuleInterface,
-	VortexModuleType,
-	VortexModuleRetry
+	ScaffConfig,
+	ScaffFileGroup, 
+	ScaffModuleStore,
+	ScaffModuleInterface,
+	ScaffModuleType,
+	ScaffModuleRetry
 } from "@types";
 
 import { log } from "@/utils";
@@ -45,7 +45,7 @@ function getDefaultValue(type: "any" | "string" | "number" | "boolean" | "object
 	}
 }
 
-function getObjectMembers(module: VortexModuleStore, retryList: VortexModuleRetry[], filePath: string, name: string, objCode: string, isType: boolean = false) {
+function getObjectMembers(module: ScaffModuleStore, retryList: ScaffModuleRetry[], filePath: string, name: string, objCode: string, isType: boolean = false) {
 	const deleteCommentRegex = /\/\/[^\n]*|\/\*[\s\S]*?\*\//g;
 	const cleanObjCode = objCode.replace(deleteCommentRegex, "").replace(/\s+/g, "");
 	const shapes = isType ? cleanObjCode.split('=')[1]!.trim() : null;
@@ -68,7 +68,7 @@ function getObjectMembers(module: VortexModuleStore, retryList: VortexModuleRetr
 			if (!module[filePath][extendsName])
 				retryList.push({ filePath, name, targetName: extendsName });
 			else {
-				const extendsInterface = module[filePath][extendsName] as VortexModuleInterface;
+				const extendsInterface = module[filePath][extendsName] as ScaffModuleInterface;
 				
 				for (const [mName, m] of Object.entries(extendsInterface.member)) {
 					memberObj[mName] = { type: m.type, value: m.value };
@@ -88,7 +88,7 @@ function getObjectMembers(module: VortexModuleStore, retryList: VortexModuleRetr
 			if (!module[filePath][and])
 				retryList.push({ filePath, name, targetName: and });
 			else {
-				const extendsType = module[filePath][and] as VortexModuleType;
+				const extendsType = module[filePath][and] as ScaffModuleType;
 				
 				for (const [mName, m] of Object.entries(extendsType.member)) {
 					memberObj[mName] = { type: m.type, value: m.value };
@@ -209,20 +209,20 @@ export function insertTabs(count: number, type: "1t" | "2s" | "4s") {
 
 /**
  * Get all exported modules from the given files
- * @param files Object with `vortex` and `generate` properties, each containing an array of files
+ * @param files Object with `scaff` and `generate` properties, each containing an array of files
  * @returns Object with all exported modules
  */
-export function getExportedModules(files: VortexFileGroup, config: VortexConfig) {
-	const module: VortexModuleStore = {};
+export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
+	const module: ScaffModuleStore = {};
 
-	if (files.generate.length == 0 && files.vortex.length == 0) {
+	if (files.generate.length == 0 && files.scaff.length == 0) {
 		log.warn("No files to get exported modules from.");
 		return module;
 	}
 
-	const retryList: VortexModuleRetry[] = []; 
+	const retryList: ScaffModuleRetry[] = []; 
 
-	for (const file of files.vortex) {
+	for (const file of files.scaff) {
 		const filePath = file.isIndex ? file.path : `${file.path}/${file.name}`;
 		const lines = file.content.split('\n');
 		let i = 0;
@@ -584,8 +584,8 @@ export function getExportedModules(files: VortexFileGroup, config: VortexConfig)
 
 		switch (module[retry.filePath]![retry.name]!.type) {
 			case 'interface': 
-				const currInterface = module[retry.filePath]![retry.name] as VortexModuleInterface;
-				const extendsInterface = module[retry.filePath]![retry.targetName] as VortexModuleInterface;
+				const currInterface = module[retry.filePath]![retry.name] as ScaffModuleInterface;
+				const extendsInterface = module[retry.filePath]![retry.targetName] as ScaffModuleInterface;
 
 				for (const [mName, m] of Object.entries(extendsInterface.member)) {
 					currInterface.member[mName] = { type: m.type, value: m.value };
@@ -593,8 +593,8 @@ export function getExportedModules(files: VortexFileGroup, config: VortexConfig)
 				break;
 
 			case 'type': 
-				const currType = module[retry.filePath]![retry.name] as VortexModuleType;
-				const extendsType = module[retry.filePath]![retry.targetName] as VortexModuleType;
+				const currType = module[retry.filePath]![retry.name] as ScaffModuleType;
+				const extendsType = module[retry.filePath]![retry.targetName] as ScaffModuleType;
 
 				for (const [mName, m] of Object.entries(extendsType.member)) {
 					currType.member[mName] = { type: m.type, value: m.value };

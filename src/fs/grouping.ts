@@ -1,33 +1,33 @@
-import type { VortexConfig, VortexFile, VortexFileGroup } from "@types";
+import type { ScaffConfig, ScaffFile, ScaffFileGroup } from "@types";
 import { fsRuntime } from "@runtime";
 import { log } from "@/utils";
 import { implRegex, modControlRegex } from "@/parser/regex";
 import { parseSpecialValues } from "@/parser/special-value";
 
 /**
- * Group the given files into Vortex files, files to generate, and normal files, and read their contents
- * @param files Array of VortexFile
- * @returns Object with `vortex`, `generate`, and `normal` properties, each containing an array of files
+ * Group the given files into Scaff files, files to generate, and normal files, and read their contents
+ * @param files Array of ScaffFile
+ * @returns Object with `scaff`, `generate`, and `normal` properties, each containing an array of files
  */
-export async function readAndSplitFiles(files: VortexFile[], config: VortexConfig) {
-	const res: VortexFileGroup = {
+export async function readAndSplitFiles(files: ScaffFile[], config: ScaffConfig) {
+	const res: ScaffFileGroup = {
 		generate: [],
-		vortex: [],
+		scaff: [],
 		normal: []
 	};
 	
 	const intgRegex = /intg (\{[A-Za-z0-9,*\s]+\}|[A-Za-z0-9,*]+) to/;
-	const implFiles: VortexFile[] = [];
-	const exports: { file: VortexFile; depth: number }[] = [];
-	const indexes: { file: VortexFile; depth: number }[] = [];
+	const implFiles: ScaffFile[] = [];
+	const exports: { file: ScaffFile; depth: number }[] = [];
+	const indexes: { file: ScaffFile; depth: number }[] = [];
 	const counter = { count: config.counterStart }; 
 
 	for (const file of files) {
 		file.content = (await fsRuntime.readText(`${file.path}/${file.name}`)).replace(/\r\n/g, "\n");
 		file.toGenerate = intgRegex.test(file.content);
-		file.name = file.name.replace(".v.gml", "");
+		file.name = file.name.replace(".ss", "");
 
-		if (file.isVortex) {
+		if (file.isScaff) {
 			const { content: parsedContent, counter: newCounter } = parseSpecialValues(file, counter);
 			file.content = parsedContent;
 			counter.count = newCounter;
@@ -46,10 +46,10 @@ export async function readAndSplitFiles(files: VortexFile[], config: VortexConfi
 			exports.push({ file, depth: file.path.split("/").filter(Boolean).length });
 		else if (implRegex.test(file.content)) 
 			implFiles.push(file);
-		else if (file.isVortex && file.toGenerate) 
+		else if (file.isScaff && file.toGenerate) 
 			res.generate.push(file);
-		else if (file.isVortex) 
-			res.vortex.push(file);
+		else if (file.isScaff) 
+			res.scaff.push(file);
 		else 
 			res.normal.push(file);
 	}
@@ -61,19 +61,19 @@ export async function readAndSplitFiles(files: VortexFile[], config: VortexConfi
 	for (const fileHandle of exports) {
 		if (implRegex.test(fileHandle.file.content))
 			implFiles.push(fileHandle.file);
-		else if (fileHandle.file.isVortex && fileHandle.file.toGenerate) 
+		else if (fileHandle.file.isScaff && fileHandle.file.toGenerate) 
 			res.generate.push(fileHandle.file);
 		else
-			res.vortex.push(fileHandle.file);
+			res.scaff.push(fileHandle.file);
 	}
 
 	for (const fileHandle of indexes) {
 		if (implRegex.test(fileHandle.file.content))
 			implFiles.push(fileHandle.file);
-		else if (fileHandle.file.isVortex && fileHandle.file.toGenerate) 
+		else if (fileHandle.file.isScaff && fileHandle.file.toGenerate) 
 			res.generate.push(fileHandle.file);
 		else
-			res.vortex.push(fileHandle.file);
+			res.scaff.push(fileHandle.file);
 	}
 
 	for (const file of implFiles) {
@@ -82,7 +82,7 @@ export async function readAndSplitFiles(files: VortexFile[], config: VortexConfi
 		
 		const className = classMatch[0].split(" ")[1];
 
-		let classFile = res.vortex.find(f => f.content.includes(`class ${className} {`));
+		let classFile = res.scaff.find(f => f.content.includes(`class ${className} {`));
 		if (!classFile) 
 			classFile = res.generate.find(f => f.content.includes(`class ${className} {`));
 

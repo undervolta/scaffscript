@@ -14,9 +14,9 @@ import type { CLIResult } from "@types";
  */
 export async function parseArgs(...args: string[]): Promise<CLIResult | null> {
 	console.log("");
-	console.log("==========================================================================");
-	console.log("Vortex GML - A superset language of GML with TypeScript-like module system");
-	console.log("==========================================================================");
+	console.log("===========================================================================");
+	console.log("ScaffScript - A superset language of GML with TypeScript-like module system");
+	console.log("===========================================================================");
 
 	if (!args.length) {
 		log.error("No command specified. Add \x1b[32m--help\x1b[0m argument for more information. Aborting...");
@@ -64,7 +64,7 @@ export async function parseArgs(...args: string[]): Promise<CLIResult | null> {
 		case "help":
 		case "-h":
 		case "--help":
-			console.log(`\x1b[33mvgml \x1b[32m<command> \x1b[34m[args]\x1b[0m`);
+			console.log(`\x1b[33mscaff \x1b[32m<command> \x1b[34m[args]\x1b[0m`);
 			console.log(`\x1b[32m<command>\x1b[0m:  The command to execute.`);
 			console.log(`\x1b[34m[args]\x1b[0m:     Optional arguments.`);
 			console.log("");

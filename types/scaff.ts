@@ -1,69 +1,71 @@
 import type { GMEvent } from "./gm-event";
 
-export type VortexConfig = {
+export type ScaffConfig = {
 	acceptAllIntegration: boolean;						// accept all generated files to be integrated without manual confirmation (default = false)
+	clearOutputDir: boolean;							// clear the output directory before generating source code (default = false)
 	counterStart: number;								// starting value for the counter special value (default = 1)
 	debugLevel: 0 | 1 | 2;								// debug level (default = 0, 0 = no debug, 1 = basic debug, 2 = verbose debug)
-	integrationOption: VortexIntegrationOptions;
+	integrationOption: ScaffIntegrationOptions;
 	noBackup: boolean;									// don't backup the original files before integration (default = false)
 	noIntegration: boolean;								// don't integrate the files to GM project (default = false)
 	onNotFound: "error" | "ignore";						// what to do when something is not found (default = "error")
+	//outputDir: string;									// output directory for the generated source code (default = "./out")
 	path: Record<string, string>;						// path aliases (default = {})
 	production: boolean;								// whether the script is running in production mode (default = false)
 	tabType: "1t" | "2s" | "4s";						// tab type to use when generating source code (default = "1t")
-	targetPlatform: VortexIntegrationTargetPlatform;	// target platform for the generated code (default = "all"). only used for tree-shaking purpose
+	targetPlatform: ScaffIntegrationTargetPlatform;	// target platform for the generated code (default = "all"). only used for tree-shaking purpose
 	useGmAssetPath: boolean;							// whether to use GM asset path when integrating files (default = false). asset path: `scripts` and `objects`
 };
 
-export type VortexFile = {
+export type ScaffFile = {
 	name: string;
 	path: string;
-	isVortex: boolean;
+	isScaff: boolean;
 	isIndex: boolean;
 	toGenerate: boolean;
 	content: string;
-	childs: VortexFile[]; 	// for files with `impl` statement
+	childs: ScaffFile[]; 	// for files with `impl` statement
 };
 
-export type VortexFileGroup = {
-	generate: VortexFile[],
-	vortex: VortexFile[],
-	normal: VortexFile[]
+export type ScaffFileGroup = {
+	generate: ScaffFile[],
+	scaff: ScaffFile[],
+	normal: ScaffFile[]
 };
 
-export type VortexModuleStore = {
+export type ScaffModuleStore = {
 	[filePathName: string]: {
 		[exportName: string]:		// use `@` prefix for the module usage to avoid conflict with built-in keywords
-			| VortexModuleConst
-			| VortexModuleFunction
-			| VortexModuleInterface
-			| VortexModuleType
-			| VortexModuleVar
-			| VortexModuleDefault;
+			| ScaffModuleConst
+			| ScaffModuleFunction
+			| ScaffModuleInterface
+			| ScaffModuleType
+			| ScaffModuleVar
+			| ScaffModuleDefault;
 	}
 }
 
-export type VortexModuleT = {
+export type ScaffModuleT = {
 	name: string;
 	value: string;
 	type: string;		// "any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum"
 };
 
-export type VortexModuleDefault = {
+export type ScaffModuleDefault = {
 	parsedStr: string;
-} & VortexModuleT;
+} & ScaffModuleT;
 
-export type VortexModuleConst = {
+export type ScaffModuleConst = {
 	parsedStr: string;
-} & VortexModuleT;
+} & ScaffModuleT;
 
-export type VortexModuleFunction = {
+export type ScaffModuleFunction = {
 	header: string;
 	blockValue: string;
 	parsedStr: string;
-} & VortexModuleT;
+} & ScaffModuleT;
 
-export type VortexModuleInterface = {
+export type ScaffModuleInterface = {
 	member: {
 		[name: string]: {
 			type: "any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum";
@@ -71,9 +73,9 @@ export type VortexModuleInterface = {
 		}
 	};
 	parsedStr: string;
-} & VortexModuleT;
+} & ScaffModuleT;
 
-export type VortexModuleType = {
+export type ScaffModuleType = {
 	member: {
 		[name: string]: {
 			type: "any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum";
@@ -81,52 +83,52 @@ export type VortexModuleType = {
 		}
 	};
 	parsedStr: string;
-} & VortexModuleT;
+} & ScaffModuleT;
 
-export type VortexModuleVar = {
+export type ScaffModuleVar = {
 	parsedStr: string;
-} & VortexModuleT;
+} & ScaffModuleT;
 
-export type VortexModuleRetry = { 
+export type ScaffModuleRetry = { 
 	filePath: string, 
 	name: string, 
 	targetName: string
 };
 
-export type VortexModule = {
+export type ScaffModule = {
 	name: string;
 	as: string; 
 	value: 
-		| VortexModuleConst
-		| VortexModuleFunction
-		| VortexModuleInterface
-		| VortexModuleType
-		| VortexModuleVar
-		| VortexModuleDefault;
+		| ScaffModuleConst
+		| ScaffModuleFunction
+		| ScaffModuleInterface
+		| ScaffModuleType
+		| ScaffModuleVar
+		| ScaffModuleDefault;
 	usingAlias: boolean;
 }
 
-export type VortexModuleUsage = {
+export type ScaffModuleUsage = {
 	cmd: "export" | "import" | "include" | null;
-	files: (string | VortexFile)[] | null;
+	files: (string | ScaffFile)[] | null;
 	modList: {
-		[moduleAlias: string]: VortexModule
+		[moduleAlias: string]: ScaffModule
 	} | null;
 	targetPath: string | null;
 	targetStr: string;
 } | null;
 
-export type VortexIntegrationBlock = {
+export type ScaffIntegrationBlock = {
 	name: string;
 	body: string;
 	path: string | null;
 	event: GMEvent | null;
 	backup: string | null;
-	flags: (keyof VortexIntegrationBlockFlags)[];
+	flags: (keyof ScaffIntegrationBlockFlags)[];
 	removeBodies: string[];
 };
 
-export type VortexIntegrationBlockFlags = Partial<{
+export type ScaffIntegrationBlockFlags = Partial<{
 	debug: true;
 	dev: true;
 	development: true;
@@ -136,10 +138,10 @@ export type VortexIntegrationBlockFlags = Partial<{
 	production: true;
 	skip: true;
 } & 
-	Record<VortexIntegrationTargetAllPlatform, true>
+	Record<ScaffIntegrationTargetAllPlatform, true>
 >;
 
-export type VortexIntegrationTargetPlatform =
+export type ScaffIntegrationTargetPlatform =
 	| "all" 
 	| "android"
 	| "gxgames"
@@ -159,7 +161,7 @@ export type VortexIntegrationTargetPlatform =
 	| "xboxseries"
 ;
 
-export type VortexIntegrationTargetPlatformExclusion =
+export type ScaffIntegrationTargetPlatformExclusion =
 	| "!android"
 	| "!gxgames"
 	| "!html5"
@@ -178,21 +180,21 @@ export type VortexIntegrationTargetPlatformExclusion =
 	| "!xboxseries"
 ;
 
-export type VortexIntegrationTargetAllPlatform =
-	| VortexIntegrationTargetPlatform 
-	| VortexIntegrationTargetPlatformExclusion
+export type ScaffIntegrationTargetAllPlatform =
+	| ScaffIntegrationTargetPlatform 
+	| ScaffIntegrationTargetPlatformExclusion
 ;
 
-export type VortexIntegration = {
+export type ScaffIntegration = {
 	path: string;
-	targets: VortexIntegrationBlock[];
+	targets: ScaffIntegrationBlock[];
 	backup: string | null;
 	content: {
 		[intgPath: string]: string;
 	};
 } | null;
 
-export type VortexIntegrationSummary = {
+export type ScaffIntegrationSummary = {
 	fullPath: string;			// the full path of generated source code in the './out' directory
 	dirPath: string;			// the path to the directory containing the GM resource in the GM IDE
 	content: string;
@@ -202,10 +204,10 @@ export type VortexIntegrationSummary = {
 	toRemoves: string[];
 };
 
-export type VortexIntegrationStore = {
-	[intgFilePath: string]: VortexIntegrationSummary;
+export type ScaffIntegrationStore = {
+	[intgFilePath: string]: ScaffIntegrationSummary;
 };
 
-export type VortexIntegrationOptions = Partial<{
+export type ScaffIntegrationOptions = Partial<{
 	isDnd: boolean;
 }>;

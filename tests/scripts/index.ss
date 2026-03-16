@@ -1,10 +1,10 @@
 include { y, z, STRING, method } from "./script1"
 import * from "./script1"
 
-//intg * to "./tests/Vortex-GML/scripts/MyFolder/Sub/scMyNewScript"
-intg * to "./tests/Vortex-GML/scripts/MyFolder/scMyScript"
-//intg { main, objCreate, keydown:keyboard_f5 } to "./tests/Vortex-GML/objects/Objects/oSystem"
-//intg { objCreate } to "./tests/Vortex-GML/objects/Objects/Sub/oPlayer2"
+//intg * to "./tests/ScaffScript/scripts/MyFolder/Sub/scMyNewScript"
+//intg * to "./tests/ScaffScript/scripts/MyFolder/scMyScript"
+intg { main, objCreate, keydown:keyboard_f5 } to "./tests/ScaffScript/objects/Objects/oSystem"
+//intg { objCreate } to "./tests/ScaffScript/objects/Objects/Sub/oPlayer2"
 
 #[main -- exclude]
 /**

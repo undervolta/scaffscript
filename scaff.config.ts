@@ -1,7 +1,8 @@
-import type { VortexConfig } from "@types";
+import type { ScaffConfig } from "@types";
 
-const config: Partial<VortexConfig> = {
+const config: Partial<ScaffConfig> = {
 	acceptAllIntegration: false,
+	clearOutputDir: true,
 	debugLevel: 0,
 	integrationOption: {
 		isDnd: false

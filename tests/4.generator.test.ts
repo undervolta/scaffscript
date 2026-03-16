@@ -1,6 +1,6 @@
 import { expect, test, describe } from "bun:test";
 
-import { getPath, getVortexFiles, getVortexConfig } from "@/fs";
+import { getPath, getScaffFiles, getScaffConfig } from "@/fs";
 import { readAndSplitFiles } from "@/fs/grouping";
 import { 
 	getExportedModules, implementClass,
@@ -13,15 +13,17 @@ import {
 } from "@/generator";
 
 import type { 
-	VortexModuleUsage,
-	VortexIntegration
+	ScaffModuleUsage,
+	ScaffIntegration
 } from "@types";
+
+import { normalizePath, resolvePath } from "@/utils";
 
 
 describe("Source Code Generation", async () => {
 	// assume the config and files are valid (from test 1)
-	const config = await getVortexConfig();
-	const files = await getVortexFiles(await getPath());
+	const config = await getScaffConfig();
+	const files = await getScaffFiles(await getPath());
 
 	// assume the files already parsed and processed (from test 2)
 	const fileGroup = await readAndSplitFiles(files, config);
@@ -32,7 +34,7 @@ describe("Source Code Generation", async () => {
 	if (!valid) return;
 
 	// assume the modules are implemented (from test 3)
-	const implMods: (VortexModuleUsage[] | null)[] = []; 
+	const implMods: (ScaffModuleUsage[] | null)[] = []; 
 	for (const file of files) {
 		const mod = await implementModules(module, fileGroup, file, config);
 		implMods.push(mod);
@@ -40,10 +42,10 @@ describe("Source Code Generation", async () => {
 
 	if (!implMods) return;
 
-	let intgData: VortexIntegration[] = [];
+	let intgData: ScaffIntegration[] = [];
 
 	test("Extract integration data", async () => {
-		intgData = fileGroup.generate.reduce<VortexIntegration[]>((acc, file) => {
+		intgData = fileGroup.generate.reduce<ScaffIntegration[]>((acc, file) => {
 			const data = extractIntegrationData(file, config);
 
 			if (data) 
@@ -60,7 +62,7 @@ describe("Source Code Generation", async () => {
 	test("Generate source code", async () => {
 		if (!intgData) return;
 		
-		const genFiles = await generateSourceCode(intgData, config);
+		const genFiles = await generateSourceCode(intgData, config, normalizePath(resolvePath("./tests/ScaffScript/ScaffScript.yyp")));
 		console.log(`Generated files: ${JSON.stringify(genFiles, null, 2)}`);
 
 		expect(Object.entries(genFiles).length).toBeGreaterThan(0);

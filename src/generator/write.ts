@@ -1,7 +1,7 @@
 import type {
-	VortexConfig,
-	VortexIntegration,
-	VortexIntegrationStore
+	ScaffConfig,
+	ScaffIntegration,
+	ScaffIntegrationStore
 } from "@types";
 
 import { fsRuntime } from "@runtime";
@@ -19,15 +19,21 @@ import {
 /**
  * Generate source code from the given integration data
  * @param intgData Array of integration data
- * @param config Vortex config
+ * @param config Scaff config
  * @returns Number of files generated
  */
-export async function generateSourceCode(intgData: VortexIntegration[], config: VortexConfig): Promise<VortexIntegrationStore> {
-	const res: VortexIntegrationStore = {};
+export async function generateSourceCode(intgData: ScaffIntegration[], config: ScaffConfig, projectPath: string): Promise<ScaffIntegrationStore> {
+	const res: ScaffIntegrationStore = {};
+	const projectPathSplit = projectPath.split("/");
 	let generatedCnt = 0;
 
-	await clearOutDir();
-	log.debug(`Output directory cleared. Generating source code...`);
+	if (config.clearOutputDir) {
+		await clearOutDir();
+		log.debug(`Output directory cleared.`);
+	}
+	
+	projectPathSplit.pop();
+	log.debug(`Generating source code...`);
 
 	for (const data of intgData) {
 		if (!data) 
@@ -68,7 +74,7 @@ export async function generateSourceCode(intgData: VortexIntegration[], config: 
 					const resvGenPathSplit = resolvedGenPath.split("/");
 					const outFileName = resvGenPathSplit.pop()!;
 					const objectIdx = resvGenPathSplit.findIndex(slug => slug === "objects");
-					const writePath = `${resvGenPathSplit.slice(0, objectIdx+1).join("/")}/${resvGenPathSplit.slice(-1).join("/")}/${outFileName}`;
+					const writePath = `${projectPathSplit.join("/")}/objects/${resvGenPathSplit.at(-1)}/${outFileName}`;
 					const writePathRel = writePath.split("/").slice(-3).join("/");
 
 					await fsRuntime.writeText(eventFile, target.body + "\n");
@@ -127,7 +133,7 @@ export async function generateSourceCode(intgData: VortexIntegration[], config: 
 				const resvGenPathSplit = resolvedGenPath.split("/");
 				const outFileName = resvGenPathSplit.pop()!;
 				const scriptIdx = resvGenPathSplit.findIndex(slug => slug === "scripts");
-				const writePath = `${resvGenPathSplit.slice(0, scriptIdx+1).join("/")}/${outFileName.replace(".gml", "")}/${outFileName}`;
+				const writePath = `${projectPathSplit.join("/")}/scripts/${outFileName.replace(".gml", "")}/${outFileName}`;
 				const writePathRel = writePath.split("/").slice(-3).join("/");
 
 				await fsRuntime.writeText(outFile, body);

@@ -1,4 +1,4 @@
-# Vortex-GML
+# ScaffScript
 
 A superset language of **GameMaker Language** (GML) for creating module-based GameMaker source codes. This minimal language is mainly used for developing GML libraries, but can also be used for other purposes.
 
@@ -27,19 +27,19 @@ bun install
 4. Run:
 
 ```bash
-bun run vortex <target_path>		# target_path = `src/` by default
+bun run scaff <target_path>		# target_path = `src/` by default
 ```
 
 ## Usage
 
-Use `*.v.gml` files to mark a file as a Vortex file. Normal `*.gml` files are still supported, but they are not processed by Vortex.
+Use `*.ss` files to mark a file as a Scaff file. Normal `*.gml` files are still supported, but they are not processed by Scaff.
 
 ### Export Module
 
-1. Use `export` statement to export types (a variable, function, class, interface, type, enum, or arrow function) from a Vortex file. 
+1. Use `export` statement to export types (a variable, function, class, interface, type, enum, or arrow function) from a Scaff file. 
 
 ```js
-// my_file.v.gml
+// my_file.ss
 
 export var my_var = 1;
 export let my_let = 2;						// `let` will be removed, so it'll become an instance variable
@@ -99,7 +99,7 @@ export type MyIntersectedType = MyType & {
 You can do a barrel export (`export * from "<path>"`) as well, so that you can import modules from the parent directory:
 
 ```js
-// index.v.gml
+// index.ss
 
 export * from "my_file";			// export all types from "my_file"
 ```
@@ -107,7 +107,7 @@ export * from "my_file";			// export all types from "my_file"
 2. Use `impl` statement to add implementation to a class.
 
 ```js
-// my_file.v.gml
+// my_file.ss
 
 export class MyClass {
 	constructor(name: string, age?: number)
@@ -126,7 +126,7 @@ impl MyClass {
 You can split the implementation into multiple files as well:
 
 ```js
-// set.v.gml
+// set.ss
 
 impl MyClass {
 	set_age(age: number) {
@@ -142,10 +142,10 @@ impl MyClass {
 
 ### Import Module
 
-1. Use `include` statement to import a module from another Vortex file, and replace the import statement with the actual content of the exported types.
+1. Use `include` statement to import a module from another Scaff file, and replace the import statement with the actual content of the exported types.
 
 ```js
-// my_other_file.v.gml
+// my_other_file.ss
 
 include { my_var, my_func, MyClass } from "my_file"
 
@@ -182,7 +182,7 @@ include my_enum from "my_file"
  // must be in curly braces and double quotes, the order of the files will be preserved, the `.gml` extension is optional
 ```
 
-2. Use `import` statement to import a module from another Vortex file, and then use `@<keyword>` statements to load and replace the content of a Vortex file to certain places in the code.
+2. Use `import` statement to import a module from another Scaff file, and then use `@<keyword>` statements to load and replace the content of a Scaff file to certain places in the code.
 
 | Keyword | Description | Example |
 | --- | --- | --- |
@@ -193,7 +193,7 @@ include my_enum from "my_file"
 | `@use` | Replace the statement with the object shape of the exported type. Only works with `interface` or `type`. | `var obj = @use MyInterface { name: "John" }` -> `var obj = { name: "John", age: 0, isActive: false };` |
 
 ```js
-// my_import.v.gml
+// my_import.ss
 
 import { my_var } from "my_file"
 
@@ -205,7 +205,7 @@ show_debug_message(@content my_var);	// var my_var = 1;
 ```
 
 ```js
-// my_other_file.v.gml
+// my_other_file.ss
 
 import * from "my_file"
 
@@ -225,13 +225,13 @@ my_method = function() {
 ```
 
 > [!WARNING]
-> If you use any of the `@` statements without importing the module first, the statement will be left as is, which won't be processed by Vortex, and won't be accepted by GameMaker. Even so, there are some exceptions for non-module `@` statements. Check the special `@` statements below (WIP).
+> If you use any of the `@` statements without importing the module first, the statement will be left as is, which won't be processed by Scaff, and won't be accepted by GameMaker. Even so, there are some exceptions for non-module `@` statements. Check the special `@` statements below (WIP).
 
 | Keyword | Description | Example |
 | --- | --- | --- |
 | `@now` | Replace the statement with the current timestamp in ISO 8601 format. | `var now = "@now";` -> `var now = "2021-01-01T00:00:00.000Z";` |
 | `@today` | Replace the statement with the current date in ISO 8601 format. | `var today = "@today";` -> `var today = "2021-01-01";` |
-| `@version` | Replace the statement with the current version of Vortex. | `var version = "@version";` -> `var version = "0.1.0";` |
+| `@version` | Replace the statement with the current version of Scaff. | `var version = "@version";` -> `var version = "0.1.0";` |
 | `@file` | Replace the statement with the current file name. | `var file = "@file";` -> `var file = "my_file";` |
 | `@line` | Replace the statement with the current line number. | `var line = @line;` -> `var line = 1;` |
 | `@counter` | Replace the statement with an increasing number. | `var counter = @counter;` -> `var counter = 1;`, `var counter = @counter;` -> `var counter = 2;`, etc. |
@@ -242,7 +242,7 @@ my_method = function() {
 Use `intg` statement to mark this file as an integration target, and `#[<name_or_event>]` statement to mark a block of code as a write target. The content of the file will be written to the actual GameMaker project.
 
 ```js
-// my_file.v.gml
+// my_file.ss
 
 intg { main, some_mod } to "./scripts/my_script"				// integrate to `scripts/my_script/my_script.gml`
 
@@ -257,7 +257,7 @@ show_debug_message("Hello, only in production!");
 ```
 
 ```js
-// my_other_file.v.gml
+// my_other_file.ss
 
 intg * to "objects/my_object"		// integrate to `objects/my_object/*`
 intg { Step, keydown:keyboard_d } to "objects/my_other_object"	
@@ -282,19 +282,50 @@ show_debug_message("Hello, from my_object keydown - d event!");
 > [!NOTE]
 > If you're using method 2 or 4, the `event` keyword is required to mark the block as an event. 
 > The `event` keyword will be omitted in the block name, so `#[StepEvent]` will become `Step` in the integration block (example: `intg { Step } to "objects/my_object"`, notice no `Event` suffix).
-> If you're creating (not modifying) a new **collision** event, you need to specify the name of the other object (case sensitive, exact name of the object in the IDE, such as `obj_player`). And you need to reopen the IDE if you're creating a new collision event using Vortex integration.
+> If you're creating (not modifying) a new **collision** event, you need to specify the name of the other object (case sensitive, exact name of the object in the IDE, such as `obj_player`). And you need to reopen the IDE if you're creating a new collision event using Scaff integration.
 
 ### Configuration
 
-Create a `vortex.config.ts` file in the root of your project with the following content:
+Create a `scaff.config.<ts\|mjs\|cjs|json>` file in the root of your project with the following content:
 
 ```ts
-import type { VortexConfig } from "vortex-gml";
+// scaff.config.ts
 
-const config: Partial<VortexConfig> = {
-	// your config here
-};
+import type { ScaffConfig } from "vgml-cli";
 
-export default config;
+export default {
+	// ...
+} satisfies ScaffConfig;
 ```
 
+```js
+// mycli.config.mjs
+
+export default {
+	// ...
+};
+```
+
+```js
+// mycli.config.cjs
+
+module.exports = {
+	// ...
+};
+```
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `acceptAllIntegration` | `boolean` | `false` | Accept all generated files to be integrated without manual confirmation. |
+| `clearOutputDir` | `boolean` | `false` | Clear the output directory before generating source code. |
+| `counterStart` | `number` | `1` | Starting value for the counter special value. |
+| `debugLevel` | `0 \| 1 \| 2` | `0` | Debug level. `0` = no debug, `1` = basic debug, `2` = verbose debug. |
+| `integrationOption` | `ScaffIntegrationOptions` | `{}` | Integration options. |
+| `noBackup` | `boolean` | `false` | Don't backup the original files before integration. |
+| `noIntegration` | `boolean` | `false` | Don't integrate the files to GM project. |
+| `onNotFound` | `"error" \| "ignore"` | `"error"` | What to do when something is not found. |
+| `path` | `Record<string, string>` | `{}` | Path aliases. |
+| `production` | `boolean` | `false` | Whether the script is running in production mode. |
+| `tabType` | `"1t" \| "2s" \| "4s"` | `"1t"` | Tab type to use when generating source code. |
+| `targetPlatform` | `ScaffIntegrationTargetPlatform` | `"all"` | Target platform for the generated code. |
+| `useGmAssetPath` | `boolean` | `false` | Whether to use GM asset path when integrating files. |

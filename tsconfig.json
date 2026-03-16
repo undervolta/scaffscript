@@ -26,7 +26,7 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false,
 
-    // Vortex-specific
+    // Scaff-specific
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],

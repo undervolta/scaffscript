@@ -4,11 +4,11 @@ import {
 } from "@/parser/regex";
 
 import type {
-	VortexConfig,
-	VortexFile,
-	VortexIntegration,
-	VortexIntegrationBlock,
-	VortexIntegrationBlockFlags,
+	ScaffConfig,
+	ScaffFile,
+	ScaffIntegration,
+	ScaffIntegrationBlock,
+	ScaffIntegrationBlockFlags,
 	GMEvent
 } from "@types";
 
@@ -85,19 +85,19 @@ function getEventFile(eventInput: string, numInput: string): GMEvent {
 /**
  * Extract integration data from the given file content
  * @param file File to extract integration data from
- * @param config Vortex config
+ * @param config Scaff config
  * @returns Array of integration data
  */
-export function extractIntegrationData(file: VortexFile, config: VortexConfig): VortexIntegration[] | null {
-	const res: VortexIntegration[] = [];
+export function extractIntegrationData(file: ScaffFile, config: ScaffConfig): ScaffIntegration[] | null {
+	const res: ScaffIntegration[] = [];
 	let invalid = false;
 
-	const blocks: VortexIntegrationBlock[] = [];
+	const blocks: ScaffIntegrationBlock[] = [];
 
 	for (const match of file.content.matchAll(intgBlockRegex)) {
 		const { name: header, body } = match.groups!;
 
-		const flags: (keyof VortexIntegrationBlockFlags)[] = header!.split("--")[1]?.split(" ").map(f => f.trim()) as (keyof VortexIntegrationBlockFlags)[] ?? [];
+		const flags: (keyof ScaffIntegrationBlockFlags)[] = header!.split("--")[1]?.split(" ").map(f => f.trim()) as (keyof ScaffIntegrationBlockFlags)[] ?? [];
 		const headerSplit = header!.split("--")[0]!.split("as").map(h => !h.includes("collision") ? h.trim().toLowerCase() : h.trim());
 		const name = headerSplit[0]!.replace("event", "").replace("ev", "").trim();
 		const eventType = (headerSplit[0]!.endsWith("event") || headerSplit[0]!.endsWith("ev")) ? name : (headerSplit[1] ?? null);

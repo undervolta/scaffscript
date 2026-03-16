@@ -11,13 +11,13 @@ import { insertTabs } from "@/parser/export-module";
 import { resolvePath, normalizePath, log, fileExists, swapAndPop } from "@/utils";
 
 import type { 
-	VortexConfig,
-	VortexFile,
-	VortexFileGroup,
-	VortexModuleStore,
-	VortexModule,
-	VortexModuleUsage,
-	VortexModuleInterface
+	ScaffConfig,
+	ScaffFile,
+	ScaffFileGroup,
+	ScaffModuleStore,
+	ScaffModule,
+	ScaffModuleUsage,
+	ScaffModuleInterface
 } from "@types";
 
 import { fsRuntime } from "@runtime";
@@ -43,15 +43,15 @@ function countTabsBeforeSubstring(str: string, sub: string, tabChar: string): nu
 /**
  * Get all imported modules from the given file
  * @param module Object with all exported modules
- * @param fileGroup Object with `vortex` and `generate` properties, each containing an array of files
+ * @param fileGroup Object with `scaff` and `generate` properties, each containing an array of files
  * @param file File to search in
- * @param config Vortex config
+ * @param config Scaff config
  * @returns Array of used modules
  */
-export async function getModuleUsage(module: VortexModuleStore, fileGroup: VortexFileGroup, file: VortexFile, config: VortexConfig): Promise<VortexModuleUsage[] | null> {
+export async function getModuleUsage(module: ScaffModuleStore, fileGroup: ScaffFileGroup, file: ScaffFile, config: ScaffConfig): Promise<ScaffModuleUsage[] | null> {
 	const matches = [...file.content.matchAll(modControlRegex)];
 	const limit = 10;
-	const results: VortexModuleUsage[] = [];
+	const results: ScaffModuleUsage[] = [];
 
 	let isInvalid = false;
 
@@ -60,7 +60,7 @@ export async function getModuleUsage(module: VortexModuleStore, fileGroup: Vorte
 
 		const res = await Promise.all(batch.map(async match => {
 			const { cmd, mod, /*src,*/ path } = match.groups!;
-			const res: VortexModuleUsage = {
+			const res: ScaffModuleUsage = {
 				cmd: null,
 				files: null,
 				modList: null,
@@ -75,14 +75,14 @@ export async function getModuleUsage(module: VortexModuleStore, fileGroup: Vorte
 			}
 			
 			const fromPath = normalizePath(resolvePath(`${file.path}/${config.path[path.slice(1, -1)] ?? path.slice(1, -1)}`));
-			const modList: Record<string, VortexModule> = {};
+			const modList: Record<string, ScaffModule> = {};
 			const alias: Record<string, string> = {};
 
 			if (!module[fromPath]) {
 				// try to load the path as a normal GML file
 				if (cmd === "include" && (mod.startsWith('{') && (mod.includes('"') || mod.includes("'")))) {
 					const files = mod.slice(1, -1).split(',').map(m => m.trim());
-					const filePaths: (string | VortexFile)[] = []; 
+					const filePaths: (string | ScaffFile)[] = []; 
 
 					for (const f of files) {
 						const filePath = normalizePath(resolvePath(`${file.path}/${f.slice(1, -1)}`));
@@ -209,7 +209,7 @@ export async function getModuleUsage(module: VortexModuleStore, fileGroup: Vorte
 	return (!isInvalid && results.every(r => r)) ? results : null;
 }
 
-export async function implementModules(module: VortexModuleStore, fileGroup: VortexFileGroup, file: VortexFile, config: VortexConfig, mods?: VortexModuleUsage[] | null) {
+export async function implementModules(module: ScaffModuleStore, fileGroup: ScaffFileGroup, file: ScaffFile, config: ScaffConfig, mods?: ScaffModuleUsage[] | null) {
 	if (!mods) 
 		mods = await getModuleUsage(module, fileGroup, file, config);
 	
@@ -389,7 +389,7 @@ export async function implementModules(module: VortexModuleStore, fileGroup: Vor
 					const tabCnt = countTabsBeforeSubstring(file.content.slice(file.content.lastIndexOf('\n', match.index), match.index + match[0]!.length), "@", tabChar);
 					const tabLevels = getTabLevels(body, config.tabType).map(l => l + tabCnt);
 					
-					const currMod = module[mod.targetPath!]![(`@${contentMod}` in module[mod.targetPath!]!) ? `@${contentMod}` : contentMod]! as VortexModuleInterface;
+					const currMod = module[mod.targetPath!]![(`@${contentMod}` in module[mod.targetPath!]!) ? `@${contentMod}` : contentMod]! as ScaffModuleInterface;
 					const modMember = Object.entries(currMod.member);
 					const tabLevel = tabCnt + tabLevels[Math.min(1, tabLevels.length - 1)]!;
 

@@ -4,7 +4,7 @@ import {
 	specialValueRegex 
 } from "@/parser/regex";
 
-import type { VortexFile } from "@types";
+import type { ScaffFile } from "@types";
 
 
 /**
@@ -13,7 +13,7 @@ import type { VortexFile } from "@types";
  * @param counter Counter object
  * @returns Parsed file content and new counter value
  */
-export function parseSpecialValues(file: VortexFile, counter: { count: number }) {
+export function parseSpecialValues(file: ScaffFile, counter: { count: number }) {
 	let res = file.content;
 
 	// remove comments first

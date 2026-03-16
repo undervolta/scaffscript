@@ -13,8 +13,8 @@
   ],
   "name":"rTest",
   "parent":{
-    "name":"Vortex-GML",
-    "path":"Vortex-GML.yyp",
+    "name":"ScaffScript",
+    "path":"ScaffScript.yyp",
   },
   "parentRoom":null,
   "physicsSettings":{

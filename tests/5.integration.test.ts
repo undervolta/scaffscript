@@ -2,8 +2,8 @@ import { expect, test, describe } from "bun:test";
 
 import { 
 	getPath, 
-	getVortexFiles, 
-	getVortexConfig, 
+	getScaffFiles, 
+	getScaffConfig, 
 	readAndSplitFiles 
 } from "@/fs";
 
@@ -14,8 +14,7 @@ import {
 
 import { 
 	extractIntegrationData,
-	generateSourceCode,
-	parseGMJson
+	generateSourceCode
 } from "@/generator";
 
 import {
@@ -23,21 +22,21 @@ import {
 } from "@/integration";
 
 import { 
-	resolvePath 
+	resolvePath,
+	normalizePath
 } from "@/utils";
 
 import type { 
-	VortexModuleUsage,
-	VortexIntegration,
-	GMProject
+	ScaffModuleUsage,
+	ScaffIntegration
 } from "@types";
 
 
 describe("Generated Source Code Integration", async () => {
 	// assume the config and files are valid (from test 1)
-	const config = await getVortexConfig();
+	const config = await getScaffConfig();
 	const scanPath = await getPath();
-	const files = await getVortexFiles(scanPath);
+	const files = await getScaffFiles(scanPath);
 
 	// assume the files already parsed and processed (from test 2)
 	const fileGroup = await readAndSplitFiles(files, config);
@@ -48,7 +47,7 @@ describe("Generated Source Code Integration", async () => {
 	if (!valid) return;
 
 	// assume the modules are implemented (from test 3)
-	const implMods: (VortexModuleUsage[] | null)[] = []; 
+	const implMods: (ScaffModuleUsage[] | null)[] = []; 
 	for (const file of files) {
 		const mod = await implementModules(module, fileGroup, file, config);
 		implMods.push(mod);
@@ -57,7 +56,7 @@ describe("Generated Source Code Integration", async () => {
 	if (!implMods) return;
 
 	// assume the integration data is extracted and source code is generated (from test 4)
-	const intgData = fileGroup.generate.reduce<VortexIntegration[]>((acc, file) => {
+	const intgData = fileGroup.generate.reduce<ScaffIntegration[]>((acc, file) => {
 		const data = extractIntegrationData(file, config);
 
 		if (data) 
@@ -68,17 +67,17 @@ describe("Generated Source Code Integration", async () => {
 
 	if (!intgData) return;
 
-	const genFiles = await generateSourceCode(intgData, config);
+	const genFiles = await generateSourceCode(intgData, config, normalizePath(resolvePath("./tests/ScaffScript/ScaffScript.yyp")));
 
 	if (Object.entries(genFiles).length <= 0) return;
 
 	test("Integrate generated source code", async () => {
 		if (!config.noIntegration) {
-			const modified = await integrateSourceCodes(genFiles, config, resolvePath("./tests/Vortex-GML/Vortex-GML.yyp"));
+			const modified = await integrateSourceCodes(genFiles, config, resolvePath("./tests/ScaffScript/ScaffScript.yyp"));
 
 			expect(modified !== null).toBe(true);
 
-			//const project = parseGMJson<GMProject>(await Bun.file(resolvePath("./tests/Vortex-GML/Vortex-GML.yyp")).text());
+			//const project = parseGMJson<GMProject>(await Bun.file(resolvePath("./tests/ScaffScript/ScaffScript.yyp")).text());
 			//console.log(`GM Project: ${JSON.stringify(project, null, 2)}`);
 			
 			//expect(project).toBeDefined();

@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "vortex-gml",
+      "name": "scaffscript",
       "devDependencies": {
         "@types/bun": "latest",
       },
