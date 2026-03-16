@@ -3,7 +3,7 @@ import * from "./script1"
 
 //intg * to "./tests/Vortex-GML/scripts/MyFolder/Sub/scMyNewScript"
 intg * to "./tests/Vortex-GML/scripts/MyFolder/scMyScript"
-intg { main, objCreate, keydown:keyboard_f5 } to "./tests/Vortex-GML/objects/Objects/oSystem"
+//intg { main, objCreate, keydown:keyboard_f5 } to "./tests/Vortex-GML/objects/Objects/oSystem"
 //intg { objCreate } to "./tests/Vortex-GML/objects/Objects/Sub/oPlayer2"
 
 #[main -- exclude]
@@ -28,6 +28,7 @@ show_debug_message("Hello, from main event (android)!");
 @content STRING
 
 #[objCreate as create -- ]
+@content y
 show_debug_message("Hello, from oSystem create event!");
 
 #[keydown:keyboard_f5 Event]

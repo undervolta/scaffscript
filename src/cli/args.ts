@@ -13,8 +13,13 @@ import type { CLIResult } from "@types";
  * @returns Whether the arguments are valid
  */
 export async function parseArgs(...args: string[]): Promise<CLIResult | null> {
+	console.log("");
+	console.log("==========================================================================");
+	console.log("Vortex GML - A superset language of GML with TypeScript-like module system");
+	console.log("==========================================================================");
+
 	if (!args.length) {
-		log.error("No command specified. Aborting...");
+		log.error("No command specified. Add \x1b[32m--help\x1b[0m argument for more information. Aborting...");
 		return null;
 	}
 
@@ -25,7 +30,7 @@ export async function parseArgs(...args: string[]): Promise<CLIResult | null> {
 		case "generate":
 			const path = args[1];
 			if (!path) {
-				log.error("No source path specified. Aborting...");
+				log.error("No source path specified. Please specify a valid source path. Aborting...");
 				return null;
 			}
 
@@ -37,7 +42,7 @@ export async function parseArgs(...args: string[]): Promise<CLIResult | null> {
 
 			const yypPath = args[3];
 			if (!yypPath) {
-				log.error("No project path specified. Aborting...");
+				log.error("No project path specified. Please specify a valid project path. Aborting...");
 				return null;
 			} else if (!yypPath.endsWith(".yyp")) {
 				log.error(`Invalid project path: \x1b[33m${yypPath}\x1b[0m. Please specify a valid \x1b[32m.yyp\x1b[0m file. Aborting...`);
@@ -59,10 +64,6 @@ export async function parseArgs(...args: string[]): Promise<CLIResult | null> {
 		case "help":
 		case "-h":
 		case "--help":
-			console.log("");
-			console.log("==========================================================================");
-			console.log("Vortex GML - A superset language of GML with TypeScript-like module system");
-			console.log("==========================================================================");
 			console.log(`\x1b[33mvgml \x1b[32m<command> \x1b[34m[args]\x1b[0m`);
 			console.log(`\x1b[32m<command>\x1b[0m:  The command to execute.`);
 			console.log(`\x1b[34m[args]\x1b[0m:     Optional arguments.`);

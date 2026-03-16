@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import { parseArgs } from "@/cli";
 import { log, resolvePath } from "@/utils";
 
@@ -29,10 +27,11 @@ import type {
 } from "@types";
 
 
+
 /**
  * Main function
  */
-async function main() {
+export async function main() {
 	const args = process.argv.slice(2);
 	const input = await parseArgs(...args);
 
@@ -122,8 +121,8 @@ async function main() {
 				console.log("---");
 				log.info('\x1b[34mnoIntegration\x1b[0m flag is set to \x1b[33mtrue\x1b[0m in the \x1b[32mvortex.config.ts\x1b[0m. No source code will be integrated. Thanks for using Vortex-GML!');
 			}
+
+			console.log("");
 		break;
 	}
 }
-
-main();
