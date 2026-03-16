@@ -105,16 +105,18 @@ async function main() {
 				log.debug("Integrating source code...");
 				const modified = await integrateSourceCodes(genFiles, config, resolvePath(input.projectPath));
 
-				if (modified === 0) {
+				if (modified === null) {
+					log.error("Failed to integrate source code. Aborting...");
+					return;
+				} 
+				else if (modified === 0) {
 					log.debug("No source code integrated.");
 					console.log("---");
 					log.info('Program executed successfully. Thanks for using Vortex-GML!');
 					return;
 				} 
-				else if (modified === null) {
-					log.error("Failed to integrate source code. Aborting...");
-					return;
-				}
+				else
+					log.info('Program executed successfully. Thanks for using Vortex-GML!');
 			}
 			else {
 				console.log("---");

@@ -3,7 +3,7 @@ import * from "./script1"
 
 //intg * to "./tests/Vortex-GML/scripts/MyFolder/Sub/scMyNewScript"
 intg * to "./tests/Vortex-GML/scripts/MyFolder/scMyScript"
-//intg { main, objCreate, keydown:keyboard_f5 } to "./tests/Vortex-GML/objects/Objects/oSystem"
+intg { main, objCreate, keydown:keyboard_f5 } to "./tests/Vortex-GML/objects/Objects/oSystem"
 //intg { objCreate } to "./tests/Vortex-GML/objects/Objects/Sub/oPlayer2"
 
 #[main -- exclude]

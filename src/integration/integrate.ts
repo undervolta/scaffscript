@@ -137,7 +137,8 @@ export async function integrateSourceCodes(genFile: VortexIntegrationStore, conf
 	}
 
 	console.log("---");
-	log.info(`All source codes integrated successfully. Integrated \x1b[32m${intgCnt}\x1b[0m file(s).`);
+	if (intgCnt > 0)
+		log.info(`All source codes integrated successfully. Integrated \x1b[32m${intgCnt}\x1b[0m file(s).`);
 	//console.log(`Summaries: ${JSON.stringify(integrations, null, 2)}`);
 	
 	return intgCnt;
