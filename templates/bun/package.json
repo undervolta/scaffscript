@@ -1,0 +1,14 @@
+{
+  "name": "scaffscript-runner",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "scripts": {
+    "scaff": "bun ./dist/index.mjs"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

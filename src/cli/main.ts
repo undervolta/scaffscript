@@ -1,10 +1,10 @@
 import { parseArgs } from "@/cli";
-import { log, resolvePath } from "@/utils";
+import { log, resolvePath, deleteDir } from "@/utils";
 
 import { 
 	getScaffFiles, 
 	getScaffConfig, 
-	readAndSplitFiles 
+	readAndSplitFiles
 } from "@/fs";
 
 import { 
@@ -25,6 +25,11 @@ import type {
 	ScaffModuleUsage,
 	ScaffIntegration
 } from "@types";
+
+import { 
+	cloneTemplate,
+	flattenTemplate
+} from "./init";
 
 
 
@@ -123,6 +128,23 @@ export async function main() {
 			}
 
 			console.log("");
+		break;
+
+		case "init":
+			const rootDir = "templates";
+			const cloneDir = `./${input.targetPath}/.temp`;
+
+			log.debug("Cloning template...");
+			await cloneTemplate({
+				repo: "https://github.com/undervolta/scaffscript.git",
+				template: input.template,
+				targetDir: cloneDir,
+				rootDir
+			});
+			
+			await flattenTemplate(`./${input.targetPath}/.temp/${rootDir}/${input.template}`, `./${input.targetPath}`);
+			await deleteDir(resolvePath(cloneDir), resolvePath("."));
+			log.debug("Template cloned successfully.");
 		break;
 	}
 }

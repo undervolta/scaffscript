@@ -5,7 +5,7 @@ import {
 	normalizePath
 } from "@/utils";
 
-import type { CLIResult } from "@types";
+import type { CLIResult, TemplateType } from "@types";
 
 /**
  * Parse command line arguments
@@ -76,6 +76,34 @@ export async function parseArgs(...args: string[]): Promise<CLIResult | null> {
 			return {
 				cmd: "help"
 			}
+
+		case "init":
+			const targetPath = args[1];
+
+			const options = [...args];
+			options.shift();
+
+			const template = options.find(opt => opt.startsWith("--template"))?.split("=")[1] ?? "npm";
+			const initGit = options.includes("--git");
+			const isNew = options.includes("--new");
+
+			if (!targetPath) {
+				log.error("No path specified. Please specify a valid path. Aborting...");
+				return null;
+			}
+
+			if (!["bun", "pnpm", "npm"].includes(template)) {
+				log.error(`Invalid template: \x1b[33m${template}\x1b[0m. Please specify a valid template (\x1b[32mbun\x1b[0m or \x1b[32mnode\x1b[0m). Aborting...`);
+				return null;
+			}
+
+			return {
+				cmd: "init",
+				targetPath,
+				template: template as TemplateType,
+				initGit,
+				isNew
+			};
 		
 		default:
 			log.error(`Invalid command: \x1b[33m${cmd}\x1b[0m. Aborting...`);
