@@ -13,6 +13,6 @@ var my_obj = @use MyStruct {
 	other: some_var,
 }
 
-@content MyClass
+// @content MyClass
 
 include { "normal.gml" } from "."

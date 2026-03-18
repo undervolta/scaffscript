@@ -59,9 +59,6 @@ module[thisPath][value.as] = value.value;
 
 This allows downstream files that import from the current file's path to see the re-exported names. The current file's path key is created if it doesn't exist yet.
 
-**No content transformation**. `export ... from` statements are not removed from `file.content`. They remain in the file but are inert at the GML level (they match `modControlRegex` but generate no GML syntax).
-
-> TODO: Should these be stripped from output? Currently they'd appear as-is in generated GML if a generate-group file uses re-export syntax.
 
 ### `include`
 

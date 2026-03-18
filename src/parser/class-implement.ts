@@ -16,10 +16,15 @@ import { convertClassMethods, parseFnParams } from "@/parser/export-module";
  * @returns Converted string
  */
 export function convertArrowFn(str: string) {
-	const header = parseHeader(str, arrowFnHeaderRegex);
-	const params = parseFnParams(arrowFnHeaderRegex.exec(str)![0]!);
+	return str.replace(arrowFnHeaderRegex, (match: string, _p1: string, _p2: string, _offset: number, _input: string, groups?: {name: string; params: string}) => {
+		if (!groups?.name) return match;
 	
-	return str.replace(arrowFnHeaderRegex, `${header[0]!.name} = function(${params.combined.join(", ")})`);
+		const rawParams = groups.params?.trim() ?? "";
+		const paramsSource = rawParams.startsWith("(") ? rawParams : `(${rawParams})`;
+		const params = parseFnParams(paramsSource);
+		
+		return `${groups.name} = function(${params.combined.join(", ")})`;
+	});
 }
 
 /**

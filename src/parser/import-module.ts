@@ -216,6 +216,13 @@ export async function implementModules(module: ScaffModuleStore, fileGroup: Scaf
 	if (!mods) 
 		return null;
 
+	// remove all import and export statements
+	const toRemove = [...file.content.matchAll(modControlRegex)];
+	for (const rm of toRemove) {
+		if (rm.groups?.cmd !== "include")
+			file.content = file.content.replace(rm[0]!, "");
+	}
+
 	for (const mod of mods) {
 		if (!mod) 
 			return null;
@@ -234,6 +241,7 @@ export async function implementModules(module: ScaffModuleStore, fileGroup: Scaf
 					.forEach(([_, value]) => {
 						module[thisPath]![value.as] = value.value;
 					});
+				
 				//console.log(`Module from ${thisPath}: ${JSON.stringify(module[thisPath], null, 2)}`);
 				break;
 
@@ -280,7 +288,7 @@ export async function implementModules(module: ScaffModuleStore, fileGroup: Scaf
 				break;
 
 			case "import":
-				file.content = file.content.replace(mod.targetStr, "");
+				//file.content = file.content.replace(mod.targetStr, "");
 
 				const cmdMatches = [...file.content.matchAll(contentModRegex)];
 				const shortCmdMatches = [...file.content.matchAll(contentModShortRegex)];

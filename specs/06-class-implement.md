@@ -67,9 +67,6 @@ myFn = function(arg = undefined) { ... }
 
 Uses `parseHeader()` with `arrowFnHeaderRegex` to find the arrow function, `parseFnParams()` to extract params, then `str.replace()` to substitute.
 
-**Note:** `convertArrowFn` is called on the entire `impl` body string, not per-method. If there are multiple arrow functions in one `impl` block, only the first one is converted (the regex is not global in practice here. `arrowFnHeaderRegex` is reset after `parseHeader` consumes it).
-
-> This is a known bug: multiple arrow functions in a single `impl` block may not all be converted.
 
 ---
 

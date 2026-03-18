@@ -221,6 +221,9 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 	}
 
 	const retryList: ScaffModuleRetry[] = []; 
+	let retryCount = 0;
+	let retryLastLen = 0;
+	let retryLen = 0;
 
 	for (const file of files.scaff) {
 		const filePath = file.isIndex ? file.path : `${file.path}/${file.name}`;
@@ -267,9 +270,10 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 					const body = funcCode.slice(funcCode.indexOf("{")).trim();
 					const params = parseFnParams(funcCode);
 					const parsedStr = `function ${name}(${params.combined.join(", ")}) ${body}`;
-						//funcCode.replace("export ", "").replace(fnParamsRegex, `(${params.combined.join(", ")})`);
 					
 					module[filePath][name] = { name, value: body.slice(1, -1), type: 'function', parsedStr };
+
+					//file.content = file.content.replace(funcCode, "");
 				}
 			} else if (line.startsWith('export class ')) {
 				// Collect multiline class
@@ -575,32 +579,39 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 		}
 	}
 
-	for (const retry of retryList) {
-		if (!module[retry.filePath]) 
-			continue;
+	retryLen = retryList.length;
+	while (retryCount < 10 && retryLastLen !== retryLen) {
+		for (const retry of retryList) {
+			if (!module[retry.filePath]) 
+				continue;
 
-		if (!module[retry.filePath]![retry.targetName]) 
-			continue;
+			if (!module[retry.filePath]![retry.targetName]) 
+				continue;
 
-		switch (module[retry.filePath]![retry.name]!.type) {
-			case 'interface': 
-				const currInterface = module[retry.filePath]![retry.name] as ScaffModuleInterface;
-				const extendsInterface = module[retry.filePath]![retry.targetName] as ScaffModuleInterface;
+			switch (module[retry.filePath]![retry.name]!.type) {
+				case 'interface': 
+					const currInterface = module[retry.filePath]![retry.name] as ScaffModuleInterface;
+					const extendsInterface = module[retry.filePath]![retry.targetName] as ScaffModuleInterface;
 
-				for (const [mName, m] of Object.entries(extendsInterface.member)) {
-					currInterface.member[mName] = { type: m.type, value: m.value };
-				}
-				break;
+					for (const [mName, m] of Object.entries(extendsInterface.member)) {
+						currInterface.member[mName] = { type: m.type, value: m.value };
+					}
+					break;
 
-			case 'type': 
-				const currType = module[retry.filePath]![retry.name] as ScaffModuleType;
-				const extendsType = module[retry.filePath]![retry.targetName] as ScaffModuleType;
+				case 'type': 
+					const currType = module[retry.filePath]![retry.name] as ScaffModuleType;
+					const extendsType = module[retry.filePath]![retry.targetName] as ScaffModuleType;
 
-				for (const [mName, m] of Object.entries(extendsType.member)) {
-					currType.member[mName] = { type: m.type, value: m.value };
-				}
-				break;
+					for (const [mName, m] of Object.entries(extendsType.member)) {
+						currType.member[mName] = { type: m.type, value: m.value };
+					}
+					break;
+			}
 		}
+
+		retryLastLen = retryLen;
+		retryLen = retryList.length;
+		retryCount++;
 	}
 
 	return module;
