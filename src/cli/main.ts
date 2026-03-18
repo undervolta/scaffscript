@@ -131,6 +131,11 @@ export async function main() {
 		break;
 
 		case "init":
+			log.info("ScaffScript project initializer hasn't been implemented yet. Please use the installation guide in the documentation.");
+			return;
+			/*
+			log.info("Initializing ScaffScript project...");
+
 			const rootDir = "templates";
 			const cloneDir = `./${input.targetPath}/.temp`;
 
@@ -142,9 +147,22 @@ export async function main() {
 				rootDir
 			});
 			
-			await flattenTemplate(`./${input.targetPath}/.temp/${rootDir}/${input.template}`, `./${input.targetPath}`);
-			await deleteDir(resolvePath(cloneDir), resolvePath("."));
-			log.debug("Template cloned successfully.");
+			const flattened = await flattenTemplate(`./${input.targetPath}/.temp/${rootDir}/${input.template}`, `./${input.targetPath}`);
+			if (!flattened) {
+				log.error("Failed to flatten template. Aborting...");
+				return;
+			}
+
+			try {
+				await deleteDir(resolvePath(cloneDir), resolvePath("."));
+			} catch (error) {
+				log.error(`Failed to delete temporary directory: ${error}`);
+				return;
+			}
+
+			log.debug("Template cloned successfully.");*/
 		break;
 	}
+
+	console.log("");
 }

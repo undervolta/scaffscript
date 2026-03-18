@@ -1,7 +1,7 @@
 import type { ScaffConfig } from "@types";
 
 const config: Partial<ScaffConfig> = {
-	acceptAllIntegration: false,
+	acceptAllIntegrations: false,
 	clearOutputDir: true,
 	debugLevel: 0,
 	integrationOption: {

@@ -1,0 +1,12 @@
+{
+  "name": "scaffscript-runner",
+  "version": "0.1.0",
+  "description": "A simple ScaffScript runner using CLI",
+  "license": "MIT",
+  "author": "Undervolta",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "scaff": "node ./dist/index.cjs"
+  }
+}

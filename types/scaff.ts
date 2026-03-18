@@ -1,7 +1,7 @@
 import type { GMEvent } from "./gm-event";
 
 export type ScaffConfig = {
-	acceptAllIntegration: boolean;						// accept all generated files to be integrated without manual confirmation (default = false)
+	acceptAllIntegrations: boolean;						// accept all generated files to be integrated without manual confirmation (default = false)
 	clearOutputDir: boolean;							// clear the output directory before generating source code (default = false)
 	counterStart: number;								// starting value for the counter special value (default = 1)
 	debugLevel: 0 | 1 | 2;								// debug level (default = 0, 0 = no debug, 1 = basic debug, 2 = verbose debug)

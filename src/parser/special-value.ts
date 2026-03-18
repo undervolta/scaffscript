@@ -1,7 +1,8 @@
 import pkg from "../../package.json" with { type: "json" };
 import { 
 	commentRegex,
-	specialValueRegex 
+	specialValueRegex,
+	countSubstring
 } from "@/parser/regex";
 
 import type { ScaffFile } from "@types";
@@ -45,8 +46,7 @@ export function parseSpecialValues(file: ScaffFile, counter: { count: number }) 
 				break;
 
 			case "line":
-				const startIdx = match.index;
-				res = res.replace(match[0]!, String(file.content.split("\n").findIndex((line, idx) => idx >= startIdx && line.includes(match[0]!)) + 1));
+				res = res.replace(match[0]!, String(countSubstring(res.slice(0, match.index), '\n') + 1));
 				break;
 			
 			case "counter":

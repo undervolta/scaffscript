@@ -58,7 +58,7 @@ describe("Module Implementation", async () => {
 		
 		//console.log(`Module: ${JSON.stringify(module, null, 2)}`);
 		//console.log(`Impl Mods: ${JSON.stringify(implMods, null, 2)}`);
-		console.log(`'Importer' file content: ${files.find(f => f.name === "importer")!.content}`);
+		console.log(`'Importer' file content: \n${files.find(f => f.name === "importer")!.content}`);
 
 		expect(implMods && implMods.length && 
 			implMods.every(m => m && (m.length === 0 || (m.length && 

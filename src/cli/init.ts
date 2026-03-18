@@ -63,14 +63,17 @@ export function cloneTemplate({
  * @param targetDir Target directory
  * @returns Promise that resolves when the template is flattened
  */
-export async function flattenTemplate(sourceDir: string, targetDir: string): Promise<void> {
+export async function flattenTemplate(sourceDir: string, targetDir: string): Promise<boolean> {
 	try {
 		await cp(sourceDir, targetDir, {
 			recursive: true,
 			force: true,
 			errorOnExist: false
 		});
+
+		return true;
 	} catch (error) {
 		log.error(`Failed to flatten template: ${error}`);
+		return false;
 	}
 }

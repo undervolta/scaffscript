@@ -121,8 +121,8 @@ export async function getScaffConfig(): Promise<ScaffConfig> {
 				const raw = await fsRuntime.readText(pkgPath);
 				const pkg = JSON.parse(raw);
 
-				if (pkg.mycli) {
-					conf = pkg.mycli;
+				if (pkg.scaff) {
+					conf = pkg.scaff;
 				}
 			} catch {
 				// ignore invalid package.json
@@ -131,7 +131,7 @@ export async function getScaffConfig(): Promise<ScaffConfig> {
 	}
 
 	return {
-		acceptAllIntegration: conf.acceptAllIntegration ?? false,
+		acceptAllIntegrations: conf.acceptAllIntegrations ?? false,
 		clearOutputDir: conf.clearOutputDir ?? false,
 		counterStart: conf.counterStart ?? 1,
 		debugLevel: conf.debugLevel ?? 0,

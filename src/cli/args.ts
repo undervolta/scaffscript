@@ -71,6 +71,11 @@ export async function parseArgs(...args: string[]): Promise<CLIResult | null> {
 			console.log("Commands:");
 			console.log("  gen(erate) <source_path> to <project_path>  Generate source code from the given path to the given project");
 			console.log("  help(-h, --help)                            Show this help message");
+			console.log("  init <target_path> [options]                Initialize a new ScaffScript project");
+			console.log("    options:");
+			console.log("      -t, --template=<template>               Specify the template to use (bun, pnpm, npm). Default: npm");
+			console.log("      --git                                   Initialize a new Git repository");
+			console.log("      --new                                   Create a new GameMaker project");
 			console.log("");
 			
 			return {
@@ -83,7 +88,7 @@ export async function parseArgs(...args: string[]): Promise<CLIResult | null> {
 			const options = [...args];
 			options.shift();
 
-			const template = options.find(opt => opt.startsWith("--template"))?.split("=")[1] ?? "npm";
+			const template = options.find(opt => opt.startsWith("--template") || opt.startsWith("-t"))?.split("=")[1] ?? "npm";
 			const initGit = options.includes("--git");
 			const isNew = options.includes("--new");
 

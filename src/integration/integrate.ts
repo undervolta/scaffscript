@@ -89,9 +89,9 @@ export async function integrateSourceCodes(genFile: ScaffIntegrationStore, confi
 	if (newFolders.length > 0 || newResources.length > 0)
 		await modifyYyProject("add", projectPath, newResources, newFolders);
 
-	if (!config.acceptAllIntegration) {
+	if (!config.acceptAllIntegrations) {
 		console.log("---");
-		log.info(`\x1b[34macceptAllIntegration\x1b[0m flag is set to \x1b[33mfalse\x1b[0m in the \x1b[32mscaff.config.ts\x1b[0m. Please review the generated source codes before integrating.`);
+		log.info(`\x1b[34macceptAllIntegrations\x1b[0m flag is set to \x1b[33mfalse\x1b[0m in the \x1b[32mscaff.config.ts\x1b[0m. Please review the generated source codes before integrating.`);
 
 		const deleteResources: string[] = [];
 

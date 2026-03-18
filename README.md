@@ -291,15 +291,13 @@ Create a `scaff.config.<ts\|mjs\|cjs|json>` file in the root of your project wit
 ```ts
 // scaff.config.ts
 
-import type { ScaffConfig } from "vgml-cli";
-
 export default {
 	// ...
-} satisfies ScaffConfig;
+};
 ```
 
 ```js
-// mycli.config.mjs
+// scaff.config.mjs
 
 export default {
 	// ...
@@ -307,7 +305,7 @@ export default {
 ```
 
 ```js
-// mycli.config.cjs
+// scaff.config.cjs
 
 module.exports = {
 	// ...
@@ -316,7 +314,7 @@ module.exports = {
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `acceptAllIntegration` | `boolean` | `false` | Accept all generated files to be integrated without manual confirmation. |
+| `acceptAllIntegrations` | `boolean` | `false` | Accept all generated files to be integrated without manual confirmation. |
 | `clearOutputDir` | `boolean` | `false` | Clear the output directory before generating source code. |
 | `counterStart` | `number` | `1` | Starting value for the counter special value. |
 | `debugLevel` | `0 \| 1 \| 2` | `0` | Debug level. `0` = no debug, `1` = basic debug, `2` = verbose debug. |

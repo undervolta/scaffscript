@@ -1,13 +1,13 @@
 {
   "name": "scaffscript",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A superset language of GML with TypeScript-like module system",
   "main": "dist/index.cjs",
   "bin": {
     "scaff": "./dist/index.cjs"
   },
   "type": "module",
-  "files": ["dist"],
+  "files": ["dist", "types/dist.ts"],
   "scripts": {
     "build": "bun run build:node",
     "build:node": "bun build src/index-node.ts --outfile dist/index.cjs --target node --format cjs",

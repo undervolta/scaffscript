@@ -1,4 +1,6 @@
 impl MyClass {
+	some_var = 1;
+	
 	set_age(age) {
 		age = age;
 	}
