@@ -1,12 +1,16 @@
 {
-  "name": "scaffscript-runner",
-  "version": "0.1.0",
-  "description": "A simple ScaffScript runner using CLI",
+  "name": "scaffscript-compiler",
+  "version": "0.1.1",
+  "description": "A ScaffScript compiler",
   "license": "MIT",
   "author": "Undervolta",
   "type": "commonjs",
-  "main": "index.js",
+  "main": "./dist/index.cjs",
+  "bin": {
+    "scaff": "./dist/index.cjs"
+  },
   "scripts": {
-    "scaff": "node ./dist/index.cjs"
+    "scaff": "node ./dist/index.cjs",
+    "generate": "node ./dist/index.cjs gen ./src to ./my-game.yyp"
   }
 }

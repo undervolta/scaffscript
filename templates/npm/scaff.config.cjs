@@ -1,4 +1,4 @@
-export default {
+module.exports = {
 	clearOutputDir: false,
 	noIntegration: true,
 	production: false,

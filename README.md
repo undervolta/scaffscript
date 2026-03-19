@@ -24,10 +24,10 @@ A superset language of **GameMaker Language** (GML) for creating module-based Ga
 bun install
 ```
 
-4. Run:
+4. CLI usage:
 
 ```bash
-bun run scaff <target_path>		# target_path = `src/` by default
+scaff <command> [args]
 ```
 
 ## Usage

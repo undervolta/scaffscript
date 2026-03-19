@@ -1,7 +1,7 @@
 {
-  "name": "scaffscript-runner",
-  "version": "0.1.0",
-  "description": "A simple ScaffScript runner using CLI",
+  "name": "scaffscript-compiler",
+  "version": "0.1.1",
+  "description": "A ScaffScript compiler",
   "license": "MIT",
   "author": "Undervolta",
   "type": "module",
@@ -9,8 +9,12 @@
   "devDependencies": {
     "@types/bun": "latest"
   },
+  "bin": {
+    "scaff": "./dist/index.mjs"
+  },
   "scripts": {
-    "scaff": "bun ./dist/index.mjs"
+    "scaff": "bun ./dist/index.mjs",
+    "generate": "bun ./dist/index.mjs gen ./src to ./my-game.yyp"
   },
   "peerDependencies": {
     "typescript": "^5"
