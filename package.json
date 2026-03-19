@@ -1,13 +1,15 @@
 {
   "name": "@scaffscript/core",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A minimal superset language of GML with TypeScript-like module system",
   "main": "dist/index.cjs",
   "bin": {
     "scaff": "./dist/index.cjs"
   },
   "type": "module",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "bun run build:all",
     "build:node": "bun build src/index-node.ts --outfile dist/index.cjs --target node --format cjs",
@@ -15,7 +17,15 @@
     "build:all": "bun run build:node && bun run build:bun",
     "dev": "bun run src/index-node.ts"
   },
-  "keywords": ["gamemaker", "gml", "scaff", "script", "superset", "module", "cli"],
+  "keywords": [
+    "gamemaker",
+    "gml",
+    "scaff",
+    "script",
+    "superset",
+    "module",
+    "cli"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
