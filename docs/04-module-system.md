@@ -205,7 +205,7 @@ import { hello } from "./exporter"
 
 ## Path Resolution
 
-All paths are resolved relative to the **current file's location**, then optionally mapped through `path` aliases in `scaff.config.ts`.
+All paths are resolved relative to the **current file's location**, then optionally mapped through `path` aliases in `scaff.config.*`.
 
 ```ts
 // scaff.config.ts

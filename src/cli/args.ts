@@ -5,7 +5,7 @@ import {
 	normalizePath
 } from "@/utils";
 
-import type { CLIResult, TemplateType } from "@types";
+import type { CLIResult } from "@types";
 
 /**
  * Parse command line arguments
@@ -34,13 +34,7 @@ export async function parseArgs(...args: string[]): Promise<CLIResult | null> {
 				return null;
 			}
 
-			const target = args[2];
-			if (target !== "to") {
-				log.error(`Invalid target: \x1b[33m${target}\x1b[0m. Please replace it with \x1b[32mto\x1b[0m after the source path argument. Aborting...`);
-				return null;
-			}
-
-			const yypPath = args[3];
+			const yypPath = args[2];
 			if (!yypPath) {
 				log.error("No project path specified. Please specify a valid project path. Aborting...");
 				return null;
@@ -69,47 +63,17 @@ export async function parseArgs(...args: string[]): Promise<CLIResult | null> {
 			console.log(`\x1b[34m[args]\x1b[0m:     Optional arguments.`);
 			console.log("");
 			console.log("Commands:");
-			console.log("  gen(erate) <source_path> to <project_path>  Generate source code from the given path to the given project");
-			console.log("  help(-h, --help)                            Show this help message");
-			console.log("  init <target_path> [options]                Initialize a new ScaffScript project");
-			console.log("    options:");
-			console.log("      -t, --template=<template>               Specify the template to use (bun, pnpm, npm). Default: npm");
-			console.log("      --git                                   Initialize a new Git repository");
-			console.log("      --new                                   Create a new GameMaker project");
+			console.log("  generate <source_path> <project_path>      Generate source code from the given path to the given project");
+			console.log("    aliases: gen");
+			console.log("    example: generate ./src ./my-game.yyp");
+			console.log("  help                                       Show this help message");
+			console.log("    aliases: -h, --help");
 			console.log("");
 			
 			return {
 				cmd: "help"
 			}
 
-		case "init":
-			const targetPath = args[1];
-
-			const options = [...args];
-			options.shift();
-
-			const template = options.find(opt => opt.startsWith("--template") || opt.startsWith("-t"))?.split("=")[1] ?? "npm";
-			const initGit = options.includes("--git");
-			const isNew = options.includes("--new");
-
-			if (!targetPath) {
-				log.error("No path specified. Please specify a valid path. Aborting...");
-				return null;
-			}
-
-			if (!["bun", "pnpm", "npm"].includes(template)) {
-				log.error(`Invalid template: \x1b[33m${template}\x1b[0m. Please specify a valid template (\x1b[32mbun\x1b[0m or \x1b[32mnode\x1b[0m). Aborting...`);
-				return null;
-			}
-
-			return {
-				cmd: "init",
-				targetPath,
-				template: template as TemplateType,
-				initGit,
-				isNew
-			};
-		
 		default:
 			log.error(`Invalid command: \x1b[33m${cmd}\x1b[0m. Aborting...`);
 			return null;

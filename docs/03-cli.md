@@ -13,39 +13,21 @@ scaff <command> [args]
 Runs the full pipeline (scan, parse, generate, integrate).
 
 ```bash
-scaff gen <source_path> to <project_path>
-scaff generate <source_path> to <project_path>
+scaff gen <source_path> <project_path>
+scaff generate <source_path> <project_path>
 ```
 
 | Argument | Description |
 |----------|-------------|
 | `source_path` | Directory to scan for `.ss` and `.gml` files. |
-| `to` | Required literal keyword between the two paths. |
 | `project_path` | Path to your GameMaker `.yyp` project file. |
 
 The `project_path` must end in `.yyp` and must exist on disk.
 
 ```bash
-scaff gen ./src to ./my-game/my-game.yyp
+scaff generate ./src ./my-game/my-game.yyp  # wrapped gm project
+scaff gen ./src ./my-game.yyp               # inline gm project
 ```
-
----
-
-### `init`
-
-> **Not implemented yet.** Prints an info message and exits.
-
-Will initialize a new ScaffScript project from a template.
-
-```bash
-scaff init <target_path> [options]
-```
-
-| Flag | Description |
-|------|-------------|
-| `-t=<template>`, `--template=<template>` | Template: `bun`, `pnpm`, or `npm` (default: `npm`). |
-| `--git` | Initialize a Git repository. |
-| `--new` | Also create a new GameMaker project. |
 
 ---
 

@@ -12,24 +12,17 @@ ScaffScript is a **superset of GML (GameMaker Language)** that adds a TypeScript
 
 ---
 
-## Installation
-
-Globall installation:
+## Project Initialization
 
 ```bash
-npm install -g scaffscript
+# using bun (recommended, faster)
+bun create @scaffscript/project@latest
 
-# or with bun (recommended, faster)
-bun add -g scaffscript
-```
+# using pnpm
+pnpm create @scaffscript/project@latest
 
-Local installation:
-
-```bash
-npm install scaffscript
-
-# or with bun
-bun add scaffscript
+# using npm, for compatibility
+npm create @scaffscript/project@latest
 ```
 
 ---
@@ -69,21 +62,72 @@ You can choose to use either structure, wrapping your GameMaker project inside y
 
 ## Usage
 
-If installed globally:
+### Syntax
 
 ```bash
-scaff gen ./src to ./your-game/your-game.yyp
+scaff <command> [args]
+```
+
+You can choose to using it by direct execution, or by package link.
+
+### Direct Execution
+
+```bash
+# using bun
+bunx scaff gen ./src ./your-game/your-game.yyp
+bunx scaff --help
+
+bun run scaff -- gen ./src ./your-game/your-game.yyp
+bun run scaff -- help
+
+# using pnpm
+pnpm exec scaff gen ./src ./your-game/your-game.yyp
+pnpm exec scaff --help
+
+pnpm run scaff -- gen ./src ./your-game/your-game.yyp
+pnpm run scaff -- help
+
+# using npm
+npx scaff gen ./src ./your-game/your-game.yyp
+npx scaff --help
+
+npm run scaff -- gen ./src ./your-game/your-game.yyp
+npm run scaff -- help
+```
+
+### Package Link (Recommended)
+
+Link the package first:
+
+```bash
+# using bun
+bun link @scaffscript/core
+
+# using pnpm
+pnpm link --global @scaffscript/core
+
+# using npm
+npm link @scaffscript/core
+```
+
+Then you can use it as normal:
+
+```bash
+scaff gen ./src ./your-game/your-game.yyp
 scaff --help
 ```
 
-If installed locally:
+After done, unlink the package:
 
 ```bash
-npx scaff gen ./src to ./your-game/your-game.yyp
-npx scaff --help
+# using bun
+bun unlink @scaffscript/core
 
-bunx scaff gen ./src to ./your-game/your-game.yyp
-bunx scaff --help
+# using pnpm
+pnpm unlink --global @scaffscript/core
+
+# using npm
+npm unlink -g @scaffscript/core
 ```
 
 ---

@@ -47,7 +47,7 @@ Each stage feeds the next. A fatal error (when `onNotFound: "error"`) short-circ
 
 | Directory | Responsibility |
 |-----------|----------------|
-| `src/cli/` | Argument parsing, command dispatch, `init` template cloning (stubbed) |
+| `src/cli/` | Argument parsing, command dispatch |
 | `src/fs/` | File discovery, config loading, file grouping into `ScaffFileGroup` |
 | `src/parser/` | Export resolution, import/include implementation, class impl merging, special value substitution, regex definitions |
 | `src/generator/` | Integration block extraction, `.gml` file writing, GM asset (`.yy`/`.yyp`) manipulation |
@@ -89,6 +89,8 @@ There is no immutable/copy-on-write pattern. The store is passed by reference to
 The `.ss` syntax is intentionally constrained. Exports are always top-level, integration blocks always start at column 0, directives are single-line. This regularity makes regex reliable enough. A parser generator would add toolchain complexity with no meaningful benefit for the current feature scope.
 
 Known limitation: the regex approach breaks on certain edge cases (e.g. `export` keyword inside a string literal at the start of a line, deeply nested brace counting for multiline constructs). These are tracked as known issues.
+
+Future work: may migrate to a real parser, but for now, the regex approach is good enough.
 
 ### Why in-memory store instead of AST?
 **ScaffScript** only needs top-level declarations and specific directive lines, not a full expression tree. A flat `Record<path, Record<name, module>>` is sufficient and trivial to look up and mutate. An AST would add significant complexity for no practical gain at this scale.

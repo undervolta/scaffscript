@@ -1,7 +1,8 @@
 export type CLIResult = 
-	| { cmd: "generate"; scanPath: string; projectPath: string; }
+	| { cmd: "generate"; 
+		scanPath: string; 
+		projectPath: string; }
 	| { cmd: "help"; }
-	| { cmd: "init"; targetPath: string; template: TemplateType; initGit: boolean; isNew: boolean; }
 	| null
 ;
 

@@ -26,12 +26,6 @@ import type {
 	ScaffIntegration
 } from "@types";
 
-import { 
-	cloneTemplate,
-	flattenTemplate
-} from "./init";
-
-
 
 /**
  * Main function
@@ -124,43 +118,10 @@ export async function main() {
 			}
 			else {
 				console.log("---");
-				log.info('\x1b[34mnoIntegration\x1b[0m flag is set to \x1b[33mtrue\x1b[0m in the \x1b[32mscaff.config.ts\x1b[0m. No source code will be integrated. Thanks for using ScaffScript!');
+				log.info('\x1b[34mnoIntegration\x1b[0m flag is set to \x1b[33mtrue\x1b[0m in the \x1b[32mscaff.config\x1b[0m. No source code will be integrated. Thanks for using ScaffScript!');
 			}
 
 			console.log("");
-		break;
-
-		case "init":
-			log.info("ScaffScript project initializer hasn't been implemented yet. Please use the installation guide in the documentation.");
-			return;
-			/*
-			log.info("Initializing ScaffScript project...");
-
-			const rootDir = "templates";
-			const cloneDir = `./${input.targetPath}/.temp`;
-
-			log.debug("Cloning template...");
-			await cloneTemplate({
-				repo: "https://github.com/undervolta/scaffscript.git",
-				template: input.template,
-				targetDir: cloneDir,
-				rootDir
-			});
-			
-			const flattened = await flattenTemplate(`./${input.targetPath}/.temp/${rootDir}/${input.template}`, `./${input.targetPath}`);
-			if (!flattened) {
-				log.error("Failed to flatten template. Aborting...");
-				return;
-			}
-
-			try {
-				await deleteDir(resolvePath(cloneDir), resolvePath("."));
-			} catch (error) {
-				log.error(`Failed to delete temporary directory: ${error}`);
-				return;
-			}
-
-			log.debug("Template cloned successfully.");*/
 		break;
 	}
 
