@@ -95,39 +95,30 @@ npm run scaff -- gen ./src ./your-game/your-game.yyp
 npm run scaff -- help
 ```
 
-### Package Link (Recommended)
+### Using Scripts
 
-Link the package first:
+Add and edit scripts in your `package.json` file:
 
-```bash
-# using bun
-bun link @scaffscript/core
-
-# using pnpm
-pnpm link --global @scaffscript/core
-
-# using npm
-npm link @scaffscript/core
+```json
+{
+	"scripts": {
+		"generate": "scaff gen ./src ./your-game/your-game.yyp",
+		"help": "scaff help"
+	}
+}
 ```
 
-Then you can use it as normal:
+Then you can run it via:
 
 ```bash
-scaff gen ./src ./your-game/your-game.yyp
-scaff --help
-```
+bun run generate
+bun run help
 
-After done, unlink the package:
+pnpm run generate
+pnpm run help
 
-```bash
-# using bun
-bun unlink @scaffscript/core
-
-# using pnpm
-pnpm unlink --global @scaffscript/core
-
-# using npm
-npm unlink -g @scaffscript/core
+npm run generate
+npm run help
 ```
 
 ---

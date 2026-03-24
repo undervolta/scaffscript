@@ -1,5 +1,6 @@
 include { y, z, STRING, method } from "./script1"
 import * from "./script1"
+import { MyClass } from "./script2"
 
 //intg * to "./tests/ScaffScript/scripts/MyFolder/Sub/scMyNewScript"
 //intg * to "./tests/ScaffScript/scripts/MyFolder/scMyScript"
@@ -22,6 +23,8 @@ show_debug_message($"y = @:y, z = @valueof z, STRING = {@nameof STRING}");
 
 var inst = new MyClass("John", 20);
 inst.print();
+
+// @content MyClass
 
 #[main -- android exclude]
 show_debug_message("Hello, from main event (android)!");

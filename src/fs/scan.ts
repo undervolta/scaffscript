@@ -64,7 +64,7 @@ export async function findConfig(filename: string) {
 export async function getScaffFiles(path: string): Promise<ScaffFile[]> {
 	log.debug(`Scanning for \x1b[34m*.ss\x1b[0m and \x1b[34m*.gml\x1b[0m files in \x1b[32m${path}\x1b[0m...`);
 	const files = await readdir(path, { withFileTypes: true, recursive: true });
-
+	
 	const vFiles = files
 		.filter(file => file.isFile() && (file.name.endsWith(".ss") || file.name.endsWith(".gml")))
 		.map(file => {
@@ -80,7 +80,7 @@ export async function getScaffFiles(path: string): Promise<ScaffFile[]> {
 		});
 
 	log.info(`Found \x1b[32m${vFiles.filter(file => file.isScaff).length} \x1b[34m*.ss\x1b[0m file(s) and \x1b[32m${vFiles.filter(file => !file.isScaff).length}\x1b[0m \x1b[34m*.gml\x1b[0m file(s).`);
-
+	
 	return vFiles;
 }
 
@@ -137,7 +137,7 @@ export async function getScaffConfig(): Promise<ScaffConfig> {
 		debugLevel: conf.debugLevel ?? 0,
 		integrationOption: conf.integrationOption ?? {},
 		noBackup: conf.noBackup ?? false,
-		noIntegration: conf.noIntegration ?? false,
+		noIntegration: conf.noIntegration ?? true,
 		onNotFound: conf.onNotFound ?? "error",
 		path: conf.path ?? {},
 		production: conf.production ?? false,

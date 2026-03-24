@@ -104,7 +104,7 @@ export function implementClass(module: ScaffModuleStore, fileGroup: ScaffFileGro
 		return false;
 	}*/
 
-	for (const fileImpl of toImpl) {
+	for (const [idx, fileImpl] of toImpl.entries()) {
 		const filePath = fileImpl.parent.isIndex ? fileImpl.parent.path : `${fileImpl.parent.path}/${fileImpl.parent.name}`;
 		const match = parseHeader(fileImpl.file.content);
 		
@@ -117,7 +117,7 @@ export function implementClass(module: ScaffModuleStore, fileGroup: ScaffFileGro
 
 			if (!className || !body) continue;
 
-			module[filePath]![className]!.parsedStr = module[filePath]![className]!.parsedStr.slice(0, -1) + `${body.replace('\n', "")}\n}\n`;
+			module[filePath]![className]!.parsedStr = module[filePath]![className]!.parsedStr.slice(0, -1) + `${body.replace('\n', "")}` + (idx < toImpl.length - 1 ? "\n\n" : "\n}\n");
 		}
 	}
 

@@ -472,7 +472,7 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 							if (!module[filePath]) 
 								module[filePath] = {};
 
-							module[filePath][name] = { name, value: arrowBlock.slice(1, -1), type: 'method', /*header, blockValue: arrowBlock,*/ parsedStr };
+							module[filePath][name] = { name, value: arrowBlock.slice(1, -1), type: 'arrow-fn', /*header, blockValue: arrowBlock,*/ parsedStr };
 						} else {
 							// Single line arrow function
 							/*let header = decl.replace("export ", "");
@@ -491,7 +491,7 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 							if (!module[filePath]) 
 								module[filePath] = {};
 
-							module[filePath][name] = { name, value: body, type: 'method', /*header, blockValue: body,*/ parsedStr };
+							module[filePath][name] = { name, value: body, type: 'arrow-fn', /*header, blockValue: body,*/ parsedStr };
 						}
 					} else if (valuePart.startsWith('function')) {
 						// Function expression
@@ -570,7 +570,7 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 							? (`${varType === "let" ? '' : 'var '}${name} = ${valuePart};`)
 							: `#macro ${name} ${valuePart}`;
 						
-						module[filePath][name] = { name, value: valuePart, type: valueType, parsedStr };
+						module[filePath][name] = { name, value: valuePart, type: (varType === "const" ? "constant" : "variable"), parsedStr };
 					}
 				}
 			}

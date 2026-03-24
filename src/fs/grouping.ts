@@ -41,10 +41,11 @@ export async function readAndSplitFiles(files: ScaffFile[], config: ScaffConfig)
 		}
 
 		const matchExport = [...file.content.matchAll(modControlRegex)];
-		
+		implRegex.lastIndex = 0;
+
 		if (matchExport.length)
 			exports.push({ file, depth: file.path.split("/").filter(Boolean).length });
-		else if (implRegex.test(file.content)) 
+		else if (implRegex.test(file.content))
 			implFiles.push(file);
 		else if (file.isScaff && file.toGenerate) 
 			res.generate.push(file);
@@ -53,13 +54,15 @@ export async function readAndSplitFiles(files: ScaffFile[], config: ScaffConfig)
 		else 
 			res.normal.push(file);
 	}
-
+	console.log(`scaff: ${JSON.stringify(res.scaff, null, 2)}`);
 	// sort based on depth (number of subdirectories)
 	exports.sort((a, b) => b.depth - a.depth);
 	indexes.sort((a, b) => b.depth - a.depth);
 
 	for (const fileHandle of exports) {
-		if (implRegex.test(fileHandle.file.content))
+		implRegex.lastIndex = 0;
+
+		if (implRegex.test(fileHandle.file.content)) 
 			implFiles.push(fileHandle.file);
 		else if (fileHandle.file.isScaff && fileHandle.file.toGenerate) 
 			res.generate.push(fileHandle.file);
@@ -68,6 +71,8 @@ export async function readAndSplitFiles(files: ScaffFile[], config: ScaffConfig)
 	}
 
 	for (const fileHandle of indexes) {
+		implRegex.lastIndex = 0;
+
 		if (implRegex.test(fileHandle.file.content))
 			implFiles.push(fileHandle.file);
 		else if (fileHandle.file.isScaff && fileHandle.file.toGenerate) 
