@@ -28,18 +28,23 @@ export async function parseArgs(...args: string[]): Promise<CLIResult | null> {
 	switch (cmd) {
 		case "gen":
 		case "generate":
-			const path = args[1];
-			if (!path) {
-				log.error("No source path specified. Please specify a valid source path. Aborting...");
-				return null;
-			}
-
-			const yypPath = args[2];
+			const yypPath = args[1];
 			if (!yypPath) {
 				log.error("No project path specified. Please specify a valid project path. Aborting...");
 				return null;
 			} else if (!yypPath.endsWith(".yyp")) {
 				log.error(`Invalid project path: \x1b[33m${yypPath}\x1b[0m. Please specify a valid \x1b[32m.yyp\x1b[0m file. Aborting...`);
+				return null;
+			}
+
+			const optionList = [...args].slice(2);
+			const options = {
+				integrate: optionList.includes("-i") || optionList.includes("--integrate"),
+				noIntegration: optionList.includes("-!i") || optionList.includes("--no-integration")
+			}
+			
+			if (options.integrate && options.noIntegration) {
+				log.error("Cannot specify both \x1b[33m--integrate\x1b[0m and \x1b[33m--no-integration\x1b[0m. Aborting...");
 				return null;
 			}
 
@@ -51,7 +56,7 @@ export async function parseArgs(...args: string[]): Promise<CLIResult | null> {
 			
 			return {
 				cmd: "generate",
-				scanPath: normalizePath(resolvePath(path)),
+				options,
 				projectPath: normalizePath(resolvePath(yypPath))
 			};
 		

@@ -45,8 +45,27 @@ export async function readAndSplitFiles(files: ScaffFile[], config: ScaffConfig)
 
 		if (matchExport.length)
 			exports.push({ file, depth: file.path.split("/").filter(Boolean).length });
-		else if (implRegex.test(file.content))
-			implFiles.push(file);
+		else if (implRegex.test(file.content)) {
+			implRegex.lastIndex = 0;
+			const implMatches = [...file.content.matchAll(implRegex)];
+			
+			if (implMatches.length) {
+				for (const match of implMatches) {
+					const className = match.groups!.name;
+					
+					if (className && file.content.includes(`class ${className} {`)) {
+						file.childs.push(file);
+						res.scaff.push(file);
+					} 
+					else
+						implFiles.push(file);
+					
+					break;
+				}
+			}
+			else
+				implFiles.push(file);
+		}
 		else if (file.isScaff && file.toGenerate) 
 			res.generate.push(file);
 		else if (file.isScaff) 
@@ -54,7 +73,7 @@ export async function readAndSplitFiles(files: ScaffFile[], config: ScaffConfig)
 		else 
 			res.normal.push(file);
 	}
-	console.log(`scaff: ${JSON.stringify(res.scaff, null, 2)}`);
+	
 	// sort based on depth (number of subdirectories)
 	exports.sort((a, b) => b.depth - a.depth);
 	indexes.sort((a, b) => b.depth - a.depth);
@@ -95,11 +114,11 @@ export async function readAndSplitFiles(files: ScaffFile[], config: ScaffConfig)
 			classFile.childs.push(file);
 		else {
 			if (config.onNotFound === "error") {
-				log.error(`Class \x1b[33m${className}\x1b[0m not found for file ${file.name}. Aborting...`);
+				log.error(`Class \x1b[33m${className}\x1b[0m not found for file \x1b[34m${file.name}\x1b[0m. Aborting...`);
 				return null;
 			}
 
-			log.warn(`Class \x1b[33m${className}\x1b[0m not found for file ${file.name}. Skipping this file...`);
+			log.warn(`Class \x1b[33m${className}\x1b[0m not found for file \x1b[34m${file.name}\x1b[0m. Skipping this file...`);
 		}
 	}
 	

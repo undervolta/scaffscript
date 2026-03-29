@@ -8,11 +8,15 @@ const config: Partial<ScaffConfig> = {
 		isDnd: false
 	},
 	noBackup: false,
-	noIntegration: false,
+	noIntegration: true,
 	production: false,
 	path: {
-		"@scr1": "./script1"
+		"@scr1": "./script1",
+		"~scr1": "~/script1",
+		"@scr/*": "./*",
+		"~/*": "~/*"
 	},
+	source: "./tests/scripts",
 	targetPlatform: "all",
 	useGmAssetPath: true
 };

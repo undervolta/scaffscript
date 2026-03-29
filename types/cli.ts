@@ -1,6 +1,9 @@
 export type CLIResult = 
 	| { cmd: "generate"; 
-		scanPath: string; 
+		options: Partial<{
+			integrate: boolean;		// force integrate the generated source code
+			noIntegration: boolean;	// force not to integrate the generated source code
+		}>;
 		projectPath: string; }
 	| { cmd: "help"; }
 	| null

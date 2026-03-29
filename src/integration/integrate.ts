@@ -68,7 +68,9 @@ export async function integrateSourceCodes(genFile: ScaffIntegrationStore, confi
 				const { type, name } = await createGMResource(gmProject, path, data, config.integrationOption);
 
 				if (type && name) {
-					newFolders.push(data.dirPath);
+					if (data.dirPath !== "")
+						newFolders.push(data.dirPath);
+					
 					newResources.push(createGMResourceStr(type, name));
 					data.isNew = true;
 				}

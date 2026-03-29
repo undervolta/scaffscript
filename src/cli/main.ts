@@ -41,7 +41,7 @@ export async function main() {
 			// get config and files
 			log.debug("Getting Scaff config...");
 			const config = await getScaffConfig();
-			const files = await getScaffFiles(resolvePath(input.scanPath));
+			const files = await getScaffFiles(resolvePath(config.source));
 
 			// process files
 			log.debug("Processing files...");
@@ -99,7 +99,7 @@ export async function main() {
 			const genFiles = await generateSourceCode(intgData, config, input.projectPath);
 
 			// integrate source code
-			if (!config.noIntegration) {
+			if (!config.noIntegration && !input.options.noIntegration) {
 				log.debug("Integrating source code...");
 				const modified = await integrateSourceCodes(genFiles, config, input.projectPath);
 
@@ -118,7 +118,11 @@ export async function main() {
 			}
 			else {
 				console.log("---");
-				log.info('\x1b[34mnoIntegration\x1b[0m flag is set to \x1b[33mtrue\x1b[0m in the \x1b[32mscaff.config\x1b[0m. No source code will be integrated. Thanks for using ScaffScript!');
+
+				if (input.options.noIntegration)
+					log.info('\x1b[34m--no-integration\x1b[0m option is set. No source code will be integrated. Thanks for using ScaffScript!');
+				else
+					log.info('\x1b[34mnoIntegration\x1b[0m flag is set to \x1b[33mtrue\x1b[0m in the \x1b[32mscaff.config\x1b[0m. No source code will be integrated. Thanks for using ScaffScript!');
 			}
 
 			console.log("");

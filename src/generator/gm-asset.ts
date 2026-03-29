@@ -91,7 +91,7 @@ function createYYScript(projectYyp: string, rescName: string, dir: string, optio
   "name":"${rescName}",
   "parent":{
     "name":"${dir !== "" ? dirSplit.pop()! : projectYyp.replace(".yyp", "")}",
-    "path":"${dir !== "" ? `folders/${dir}.yy` : projectYyp}",
+    "path":"${dir !== "" ? `folders/${dir}.yy` : `${projectYyp}.yyp`}",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",
@@ -122,7 +122,7 @@ function createYYObject(projectYyp: string, rescName: string, dir: string, event
   "overriddenProperties":[],
   "parent":{
     "name":"${dir !== "" ? dirSplit.pop()! : projectYyp.replace(".yyp", "")}",
-    "path":"${dir !== "" ? `folders/${dir}.yy` : projectYyp}",
+    "path":"${dir !== "" ? `folders/${dir}.yy` : `${projectYyp}.yyp`}",
   },
   "parentObjectId":null,
   "persistent":false,
@@ -344,9 +344,9 @@ export async function modifyYyProject(type: "add" | "remove", projectPath: strin
 	if (type === "add") {
 		let addedFolderCnt = 0;
 		if (toAddFolders) {
-			const folderStartIdx = rawLines.findIndex(line => line.includes("Folders"));
-			const folderEndIdx = rawLines.findIndex((line, idx) => idx > folderStartIdx && line.includes("]"));
-			const existsFolders = rawLines.slice(folderStartIdx + 1, folderEndIdx);
+			let folderStartIdx = rawLines.findIndex(line => line.includes("Folders"));
+			let folderEndIdx = rawLines.findIndex((line, idx) => idx >= folderStartIdx && line.includes("]"));
+			const existsFolders = (folderEndIdx > folderStartIdx) ? rawLines.slice(folderStartIdx + 1, folderEndIdx) : [];
 			
 			for (const folderDir of toAddFolders) {
 				const folderSplit = folderDir.split("/");
@@ -362,6 +362,12 @@ export async function modifyYyProject(type: "add" | "remove", projectPath: strin
 					const dupe = existsFolders.find(line => line.includes(`"%Name":"${name}"`));
 
 					if (!dupe) {
+						if (!existsFolders.length) {
+							rawLines[folderStartIdx] = '  "Folders":[';
+							rawLines.splice(folderStartIdx + 1, 0, '  ],');
+							folderEndIdx = folderStartIdx + 1;
+						}
+
 						rawLines.splice(folderEndIdx + addedFolderCnt, 0, createGMFolderStr(name));
 						addedFolderCnt++;
 					}

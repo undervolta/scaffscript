@@ -104,20 +104,68 @@ export function implementClass(module: ScaffModuleStore, fileGroup: ScaffFileGro
 		return false;
 	}*/
 
-	for (const [idx, fileImpl] of toImpl.entries()) {
+	for (const fileImpl of toImpl) {
 		const filePath = fileImpl.parent.isIndex ? fileImpl.parent.path : `${fileImpl.parent.path}/${fileImpl.parent.name}`;
 		const match = parseHeader(fileImpl.file.content);
+		const classNames: string[] = [];
 		
-		for (const m of match) {
+		for (const [mIdx, m] of match.entries()) {
 			const { name: className } = m;
 			let { body } = m;
 
 			body = convertClassMethods(body);
 			body = convertArrowFn(body);
-
+			
 			if (!className || !body) continue;
+			classNames.push(className);
+			
+			if (!module[filePath] || !module[filePath][className]) {
+				let newFilePath: string | null = null;
 
-			module[filePath]![className]!.parsedStr = module[filePath]![className]!.parsedStr.slice(0, -1) + `${body.replace('\n', "")}` + (idx < toImpl.length - 1 ? "\n\n" : "\n}\n");
+				for (const file of fileGroup.scaff) {
+					if (file.content.includes(`class ${className} {`)) {
+						newFilePath = file.isIndex ? file.path : `${file.path}/${file.name}`;
+						break;
+					}
+				}
+
+				if (!newFilePath) {
+					for (const file of fileGroup.generate) {
+						if (file.content.includes(`class ${className} {`)) {
+							newFilePath = file.isIndex ? file.path : `${file.path}/${file.name}`;
+							break;
+						}
+					}
+				}
+
+				if (!newFilePath) {
+					if (config.onNotFound === "error") {
+						log.error(`Class \x1b[33m${className}\x1b[0m not found for file \x1b[34m${fileImpl.file.name}\x1b[0m. Aborting...`);
+						return false;
+					} else {
+						log.warn(`Class \x1b[33m${className}\x1b[0m not found for file \x1b[34m${fileImpl.file.name}\x1b[0m. Skipping this class...`);
+						continue;
+					}
+				}
+				
+				const classCloseBracket = module[newFilePath]![className]!.parsedStr.lastIndexOf("}");
+				module[newFilePath]![className]!.parsedStr = module[newFilePath]![className]!.parsedStr.slice(0, classCloseBracket) + `${body.replace('\n', "")}` + (mIdx < match.length - 1 ? "\n\n" : "\n}\n");
+
+				if (mIdx === match.length - 1) {
+					for (const name of classNames) {
+						if (!module[filePath] || !module[filePath]![name]) 
+							continue;
+
+						module[filePath]![name]!.parsedStr += "}\n";
+					}
+				} else
+					classNames.splice(classNames.indexOf(className), 1);
+				continue;
+			}
+			else {
+				const classCloseBracket = module[filePath]![className]!.parsedStr.lastIndexOf("}");
+				module[filePath]![className]!.parsedStr = module[filePath]![className]!.parsedStr.slice(0, classCloseBracket) + `${body.replace('\n', "")}` + ((mIdx < match.length - 1) ? "\n\n" : "\n}\n");
+			}
 		}
 	}
 

@@ -11,7 +11,8 @@ export type ScaffConfig = {
 	onNotFound: "error" | "ignore";						// what to do when something is not found (default = "error")
 	//outputDir: string;									// output directory for the generated source code (default = "./out")
 	path: Record<string, string>;						// path aliases (default = {})
-	production: boolean;								// whether the script is running in production mode (default = false)
+	production: boolean;
+	source: string;								// whether the script is running in production mode (default = false)
 	tabType: "1t" | "2s" | "4s";						// tab type to use when generating source code (default = "1t")
 	targetPlatform: ScaffIntegrationTargetPlatform;	// target platform for the generated code (default = "all"). only used for tree-shaking purpose
 	useGmAssetPath: boolean;							// whether to use GM asset path when integrating files (default = false). asset path: `scripts` and `objects`

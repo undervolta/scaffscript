@@ -1,10 +1,11 @@
 include { y, z, STRING, method } from "./script1"
 import * from "./script1"
 import { MyClass } from "./script2"
+import { Test } from "./class/Test"
 
 //intg * to "./tests/ScaffScript/scripts/MyFolder/Sub/scMyNewScript"
-//intg * to "./tests/ScaffScript/scripts/MyFolder/scMyScript"
-intg { main, objCreate, keydown:keyboard_f5 } to "./tests/ScaffScript/objects/Objects/oSystem"
+intg * to "./tests/ScaffScript/scripts/MyFolder/scMyScript"
+//intg { main, objCreate, keydown:keyboard_f5 } to "./tests/ScaffScript/objects/Objects/oSystem"
 //intg { objCreate } to "./tests/ScaffScript/objects/Objects/Sub/oPlayer2"
 
 #[main -- exclude]
@@ -24,7 +25,9 @@ show_debug_message($"y = @:y, z = @valueof z, STRING = {@nameof STRING}");
 var inst = new MyClass("John", 20);
 inst.print();
 
-// @content MyClass
+//@content MyClass
+
+//@content Test
 
 #[main -- android exclude]
 show_debug_message("Hello, from main event (android)!");

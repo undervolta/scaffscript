@@ -41,19 +41,19 @@ function getEventFile(eventInput: string, numInput: string): GMEvent {
 			event = EVENT_TYPE.STEP; break;
 		case "collision": 
 			event = EVENT_TYPE.COLLISION; dynNum = true; break;
-		case "keydown": case "keyboard": 
+		case "keydown": case "key_down": case "keyboard": 
 			event = EVENT_TYPE.KEY_DOWN; break;
 		case "mouse": 
 			event = EVENT_TYPE.MOUSE; break;
-		case "other": 
+		case "other": case "async":
 			event = EVENT_TYPE.OTHER; break;
 		case "draw": 
 			event = EVENT_TYPE.DRAW; break;
-		case "keypress": 
+		case "keypress": case "key_press": 
 			event = EVENT_TYPE.KEY_PRESS; break;
-		case "keyrelease": 
+		case "keyrelease": case "key_release": 
 			event = EVENT_TYPE.KEY_RELEASE; break;
-		case "cleanup": 
+		case "cleanup": case "clean_up": 
 			event = EVENT_TYPE.CLEAN_UP; break;
 		case "gesture": 
 			event = EVENT_TYPE.GESTURE; break;

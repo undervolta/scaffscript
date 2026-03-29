@@ -34,7 +34,8 @@
     "build:node": "bun build src/index-node.ts --outfile dist/index.cjs --target node --format cjs",
     "build:bun": "bun build src/index-bun.ts --outfile build/index.mjs --target bun --format esm",
     "build:all": "bun run build:node && bun run build:bun",
-    "dev": "bun run src/index-node.ts"
+    "dev": "bun run src/index-node.ts",
+    "prelink": "bun run build"
   },
   "type": "module"
 }

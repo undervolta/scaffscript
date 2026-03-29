@@ -23,7 +23,7 @@ import { normalizePath, resolvePath } from "@/utils";
 describe("Source Code Generation", async () => {
 	// assume the config and files are valid (from test 1)
 	const config = await getScaffConfig();
-	const files = await getScaffFiles(await getPath());
+	const files = await getScaffFiles('tests/scripts');
 
 	// assume the files already parsed and processed (from test 2)
 	const fileGroup = await readAndSplitFiles(files, config);

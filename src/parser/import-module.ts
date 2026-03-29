@@ -39,6 +39,43 @@ function countTabsBeforeSubstring(str: string, sub: string, tabChar: string): nu
 	return count;
 }
 
+function resolveImportPath(filePath: string, importPath: string, config: ScaffConfig): string {
+	if (!config.path)
+		return resolvePath(`${filePath}/${importPath}`);
+
+	const useWildcard = Object.keys(config.path)
+		.filter(k => k.endsWith("*"))
+		.find(k => importPath.startsWith(k.slice(0, -1)));
+
+	if (useWildcard) {
+		const pathAlias = config.path[useWildcard]?.replace("*", "");
+		const dynPath = importPath.replace(useWildcard.slice(0, -2), "");
+		
+		if (!pathAlias) {
+			log.error(`Path \x1b[33m${importPath}\x1b[0m not found in path aliases. Aborting...`);
+			return "";
+		}
+
+		if (pathAlias.startsWith('~')) {
+			return resolvePath(`${config.source}/${pathAlias.replace('~/', "").replace('~', "")}${dynPath}`);
+		}
+
+		return resolvePath(`${filePath}/${pathAlias}${dynPath}`);
+
+	}
+	else if (config.path[importPath]) {
+		const pathAlias = config.path[importPath];
+		
+		if (pathAlias.startsWith('~')) {
+			return resolvePath(`${config.source}/${pathAlias.replace('~/', "").replace('~', "")}`);
+		}
+
+		return resolvePath(`${filePath}/${pathAlias}`);
+	}
+
+	return resolvePath(`${filePath}/${importPath}`);
+}
+
 
 /**
  * Get all imported modules from the given file
@@ -74,10 +111,10 @@ export async function getModuleUsage(module: ScaffModuleStore, fileGroup: ScaffF
 				return null;
 			}
 			
-			const fromPath = normalizePath(resolvePath(`${file.path}/${config.path[path.slice(1, -1)] ?? path.slice(1, -1)}`));
+			const fromPath = normalizePath(resolveImportPath(file.path, path.slice(1, -1), config));
 			const modList: Record<string, ScaffModule> = {};
 			const alias: Record<string, string> = {};
-
+			
 			if (!module[fromPath]) {
 				// try to load the path as a normal GML file
 				if (cmd === "include" && (mod.startsWith('{') && (mod.includes('"') || mod.includes("'")))) {

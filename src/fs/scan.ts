@@ -18,6 +18,11 @@ const CONFIG_FILES = [
 ];
 
 
+function dirIsIgnored(dir: string) {
+	const slugs = normalizePath(dir).split("/");
+	return slugs.find(slug => slug.startsWith("_")) ? true : false;
+}
+
 /**
  * Get the path to scan from command line arguments or prompt
  * @param path Path override
@@ -66,7 +71,7 @@ export async function getScaffFiles(path: string): Promise<ScaffFile[]> {
 	const files = await readdir(path, { withFileTypes: true, recursive: true });
 	
 	const vFiles = files
-		.filter(file => file.isFile() && (file.name.endsWith(".ss") || file.name.endsWith(".gml")))
+		.filter(file => file.isFile() && !file.name.startsWith("_") && !dirIsIgnored(file.parentPath) && (file.name.endsWith(".ss") || file.name.endsWith(".gml")))
 		.map(file => {
 			return {
 				name: file.name,
@@ -141,6 +146,7 @@ export async function getScaffConfig(): Promise<ScaffConfig> {
 		onNotFound: conf.onNotFound ?? "error",
 		path: conf.path ?? {},
 		production: conf.production ?? false,
+		source: conf.source ?? "./src",
 		tabType: conf.tabType ?? "1t",
 		targetPlatform: conf.targetPlatform ?? "all",
 		useGmAssetPath: conf.useGmAssetPath ?? false

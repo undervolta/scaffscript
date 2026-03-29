@@ -35,7 +35,8 @@ import type {
 describe("Generated Source Code Integration", async () => {
 	// assume the config and files are valid (from test 1)
 	const config = await getScaffConfig();
-	const scanPath = await getPath();
+	const scanPath = 'tests/scripts';			 //await getPath();
+	const projectPath = resolvePath("./tests/ScaffScript/ScaffScript.yyp");		//resolvePath('../test-cli/My Game.yyp');
 	const files = await getScaffFiles(scanPath);
 
 	// assume the files already parsed and processed (from test 2)
@@ -67,17 +68,17 @@ describe("Generated Source Code Integration", async () => {
 
 	if (!intgData) return;
 
-	const genFiles = await generateSourceCode(intgData, config, normalizePath(resolvePath("./tests/ScaffScript/ScaffScript.yyp")));
+	const genFiles = await generateSourceCode(intgData, config, normalizePath(projectPath));
 
 	if (Object.entries(genFiles).length <= 0) return;
 
 	test("Integrate generated source code", async () => {
 		if (!config.noIntegration) {
-			const modified = await integrateSourceCodes(genFiles, config, resolvePath("./tests/ScaffScript/ScaffScript.yyp"));
+			const modified = await integrateSourceCodes(genFiles, config, projectPath);
 
 			expect(modified !== null).toBe(true);
 
-			//const project = parseGMJson<GMProject>(await Bun.file(resolvePath("./tests/ScaffScript/ScaffScript.yyp")).text());
+			//const project = parseGMJson<GMProject>(await Bun.file(projectPath).text());
 			//console.log(`GM Project: ${JSON.stringify(project, null, 2)}`);
 			
 			//expect(project).toBeDefined();
