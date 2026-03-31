@@ -1,5 +1,5 @@
 import { parseArgs } from "@/cli";
-import { log, resolvePath, deleteDir } from "@/utils";
+import { log, resolvePath } from "@/utils";
 
 import { 
 	getScaffFiles, 
@@ -99,7 +99,7 @@ export async function main() {
 			const genFiles = await generateSourceCode(intgData, config, input.projectPath);
 
 			// integrate source code
-			if (!config.noIntegration && !input.options.noIntegration) {
+			if ((!config.noIntegration && !input.options.noIntegration) || input.options.integrate) {
 				log.debug("Integrating source code...");
 				const modified = await integrateSourceCodes(genFiles, config, input.projectPath);
 
