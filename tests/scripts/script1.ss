@@ -4,7 +4,7 @@ export let z = 3;
 export const STRING = "string";
 
 export function test_function(x?) {
-	show_debug_message($"test from file1, x = {x}, y = {y}, \"{");
+	show_debug_message($"test from file1, x = {x}, y = {y}, \"{}");
 }
 
 export const method = function(arg1, arg2) {
@@ -22,3 +22,4 @@ export enum MyEnum {
 	B,
 	C
 }
+

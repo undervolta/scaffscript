@@ -1,18 +1,19 @@
 import { parseArgs } from "@/cli";
 import { log, resolvePath } from "@/utils";
 
-import { 
-	getScaffFiles, 
-	getScaffConfig, 
+import {
+	getScaffFiles,
+	getScaffConfig,
 	readAndSplitFiles
 } from "@/fs";
 
-import { 
+import {
 	getExportedModules, implementClass,
-	implementModules
+	implementModules,
+	reexportModule
 } from "@/parser";
 
-import { 
+import {
 	extractIntegrationData,
 	generateSourceCode
 } from "@/generator";
@@ -21,7 +22,7 @@ import {
 	integrateSourceCodes
 } from "@/integration";
 
-import type { 
+import type {
 	ScaffModuleUsage,
 	ScaffIntegration
 } from "@types";
@@ -35,7 +36,7 @@ export async function main() {
 	const input = await parseArgs(...args);
 
 	if (!input) return;
-	
+
 	switch (input.cmd) {
 		case "generate":
 			// get config and files
@@ -65,19 +66,23 @@ export async function main() {
 
 			// implement modules
 			log.debug("Implementing modules...");
-			const implMods: (ScaffModuleUsage[] | null)[] = []; 
+			for (const file of files) {
+				reexportModule(module, file, config);
+			}
+
+			const implMods: (ScaffModuleUsage[] | null)[] = [];
 			for (const file of files) {
 				const mod = await implementModules(module, fileGroup, file, config);
 				implMods.push(mod);
 			}
 
-			if (implMods && implMods.length && 
-				implMods.every(modUsage => modUsage && (modUsage.length === 0 || (modUsage.length && 
+			if (implMods && implMods.length &&
+				implMods.every(modUsage => modUsage && (modUsage.length === 0 || (modUsage.length &&
 					modUsage.every(mm => mm && mm.cmd))
-				))) 
+				)))
 			{
 				log.debug("Modules implemented successfully.");
-			} 
+			}
 			else {
 				log.error("Failed to implement modules. Aborting...");
 				return;
@@ -88,7 +93,7 @@ export async function main() {
 			const intgData = fileGroup.generate.reduce<ScaffIntegration[]>((acc, file) => {
 				const data = extractIntegrationData(file, config);
 
-				if (data) 
+				if (data)
 					acc.push(...data);
 
 				return acc;
@@ -106,13 +111,13 @@ export async function main() {
 				if (modified === null) {
 					log.error("Failed to integrate source code. Aborting...");
 					return;
-				} 
+				}
 				else if (modified === 0) {
 					log.debug("No source code integrated.");
 					console.log("---");
 					log.info('Program executed successfully. Thanks for using ScaffScript!');
 					return;
-				} 
+				}
 				else
 					log.info('Program executed successfully. Thanks for using ScaffScript!');
 			}

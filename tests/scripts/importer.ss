@@ -11,8 +11,7 @@ var my_obj = @use MyStruct {
 	age: 20,
 	extra: "Hello",
 	other: some_var,
+	_daw: gwg
 }
-
-// @content MyClass
 
 include { "normal.gml" } from "."

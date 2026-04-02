@@ -1,18 +1,18 @@
 import { expect, test, describe } from "bun:test";
 
-import { 
-	getPath, 
-	getScaffFiles, 
-	getScaffConfig, 
-	readAndSplitFiles 
+import {
+	getPath,
+	getScaffFiles,
+	getScaffConfig,
+	readAndSplitFiles
 } from "@/fs";
 
-import { 
+import {
 	getExportedModules, implementClass,
-	implementModules
+	implementModules, reexportModule
 } from "@/parser";
 
-import { 
+import {
 	extractIntegrationData,
 	generateSourceCode
 } from "@/generator";
@@ -21,12 +21,12 @@ import {
 	integrateSourceCodes
 } from "@/integration";
 
-import { 
+import {
 	resolvePath,
 	normalizePath
 } from "@/utils";
 
-import type { 
+import type {
 	ScaffModuleUsage,
 	ScaffIntegration
 } from "@types";
@@ -48,7 +48,11 @@ describe("Generated Source Code Integration", async () => {
 	if (!valid) return;
 
 	// assume the modules are implemented (from test 3)
-	const implMods: (ScaffModuleUsage[] | null)[] = []; 
+	for (const file of files) {
+		reexportModule(module, file, config);
+	}
+
+	const implMods: (ScaffModuleUsage[] | null)[] = [];
 	for (const file of files) {
 		const mod = await implementModules(module, fileGroup, file, config);
 		implMods.push(mod);
@@ -60,7 +64,7 @@ describe("Generated Source Code Integration", async () => {
 	const intgData = fileGroup.generate.reduce<ScaffIntegration[]>((acc, file) => {
 		const data = extractIntegrationData(file, config);
 
-		if (data) 
+		if (data)
 			acc.push(...data);
 
 		return acc;
@@ -80,7 +84,7 @@ describe("Generated Source Code Integration", async () => {
 
 			//const project = parseGMJson<GMProject>(await Bun.file(projectPath).text());
 			//console.log(`GM Project: ${JSON.stringify(project, null, 2)}`);
-			
+
 			//expect(project).toBeDefined();
 		} else {
 			console.log("No integration performed.");

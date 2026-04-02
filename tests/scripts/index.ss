@@ -1,33 +1,32 @@
+intg * to "./tests/ScaffScript/scripts/MyFolder/scMyScript"
+
 include { y, z, STRING, method } from "./script1"
 import * from "./script1"
 import { MyClass } from "./script2"
 import { Test } from "./class/Test"
-
-//intg * to "./tests/ScaffScript/scripts/MyFolder/Sub/scMyNewScript"
-intg * to "./tests/ScaffScript/scripts/MyFolder/scMyScript"
-//intg { main, objCreate, keydown:keyboard_f5 } to "./tests/ScaffScript/objects/Objects/oSystem"
-//intg { objCreate } to "./tests/ScaffScript/objects/Objects/Sub/oPlayer2"
 
 #[main -- exclude]
 /**
  * Version: @version
  * This is a JSDoc comment. Created at @today.
  * Line: @line. File: "@file". Counter: @counter.
- * 
+ *
  * @param x The first parameter.
  * @param y The second parameter.
  * @returns The sum of x and y.
  */
 @content method
 
+/// won't removed
 show_debug_message($"y = @:y, z = @valueof z, STRING = {@nameof STRING}");
+include * from "./const"
 
 var inst = new MyClass("John", 20);
 inst.print();
 
 //@content MyClass
 
-//@content Test
+@content Test
 
 #[main -- android exclude]
 show_debug_message("Hello, from main event (android)!");

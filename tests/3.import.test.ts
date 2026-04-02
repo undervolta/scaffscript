@@ -2,9 +2,9 @@ import { expect, test, describe } from "bun:test";
 
 import { getPath, getScaffFiles, getScaffConfig } from "@/fs";
 import { readAndSplitFiles } from "@/fs/grouping";
-import { 
+import {
 	getExportedModules, implementClass,
-	getModuleUsage, implementModules 
+	getModuleUsage, implementModules, reexportModule
 } from "@/parser";
 
 import type { ScaffModuleUsage } from "@types";
@@ -49,19 +49,23 @@ describe("Module Implementation", async () => {
 	});
 
 	test("Implement modules in all files", async () => {
-		const implMods: (ScaffModuleUsage[] | null)[] = []; 
+		const implMods: (ScaffModuleUsage[] | null)[] = [];
+
+		for (const file of files) {
+			reexportModule(module, file, config);
+		}
 
 		for (const file of files) {
 			const mod = await implementModules(module, fileGroup, file, config);
 			implMods.push(mod);
 		}
-		
+
 		//console.log(`Module: ${JSON.stringify(module, null, 2)}`);
 		//console.log(`Impl Mods: ${JSON.stringify(implMods, null, 2)}`);
 		console.log(`'Importer' file content: \n${files.find(f => f.name === "importer")!.content}`);
 
-		expect(implMods && implMods.length && 
-			implMods.every(m => m && (m.length === 0 || (m.length && 
+		expect(implMods && implMods.length &&
+			implMods.every(m => m && (m.length === 0 || (m.length &&
 				m.every(mm => mm && mm.cmd))
 			))
 		).toBeTruthy();

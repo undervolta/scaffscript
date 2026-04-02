@@ -1,15 +1,16 @@
-import type { 
+import type {
 	ScaffConfig,
-	ScaffFileGroup, 
+	ScaffFileGroup,
+	ScaffFile,
 	ScaffModuleStore,
 	ScaffModuleInterface,
 	ScaffModuleType,
 	ScaffModuleRetry
 } from "@types";
 
-import { log } from "@/utils";
-import { fnParamsRegex } from "@/parser/regex";
-
+import { log, normalizePath } from "@/utils";
+import { fnParamsRegex, modControlRegex } from "@/parser/regex";
+import { resolveImportPath } from "@/parser/import-module";
 
 function inferType(value: string): "any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum" {
 	value = value.trim();
@@ -55,7 +56,7 @@ function getObjectMembers(module: ScaffModuleStore, retryList: ScaffModuleRetry[
 		type: "any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum";
 		value: any;
 	}> = {};
-	
+
 	if (objCode.includes("extends")) {
 		const extendsMatch = objCode.match(/extends (\w+)/);
 
@@ -64,16 +65,16 @@ function getObjectMembers(module: ScaffModuleStore, retryList: ScaffModuleRetry[
 
 			if (!module[filePath])
 				module[filePath] = {};
-			
+
 			if (!module[filePath][extendsName])
 				retryList.push({ filePath, name, targetName: extendsName });
 			else {
 				const extendsInterface = module[filePath][extendsName] as ScaffModuleInterface;
-				
+
 				for (const [mName, m] of Object.entries(extendsInterface.member)) {
 					memberObj[mName] = { type: m.type, value: m.value };
 				}
-			} 
+			}
 		}
 	} else if (isType && objCode.includes("&")) {
 		const andSplit = shapes!.split("&").map(s => s.trim().replace(";", ""));
@@ -89,7 +90,7 @@ function getObjectMembers(module: ScaffModuleStore, retryList: ScaffModuleRetry[
 				retryList.push({ filePath, name, targetName: and });
 			else {
 				const extendsType = module[filePath][and] as ScaffModuleType;
-				
+
 				for (const [mName, m] of Object.entries(extendsType.member)) {
 					memberObj[mName] = { type: m.type, value: m.value };
 				}
@@ -103,12 +104,12 @@ function getObjectMembers(module: ScaffModuleStore, retryList: ScaffModuleRetry[
 		const partFirst = defParts[0]!.trim().replace(";", "");
 
 		const memName = /\w+/.exec(parts[0]!.replace("?", ""))![0]!;
-		const defValue = defParts.length === 1 
+		const defValue = defParts.length === 1
 			? (parts[0]!.endsWith('?') ? 'undefined' : getDefaultValue(inferInlineType(partFirst)))
 			: defParts[1]!.trim();
 
 		memberObj[memName] = { type: parts.length === 1 ? "any" : inferInlineType(partFirst), value: defValue };
-	} 
+	}
 
 	return memberObj;
 }
@@ -166,8 +167,8 @@ export function parseFnParams(str: string) {
 	names = params.map(p => p.trim().split('=')[0]!.trim());
 	defaults = params.map(p => {
 		const def = p.trim().split('=');
-		
-		return def.length > 1 
+
+		return def.length > 1
 			? def[1]?.trim()
 			: (def[0]?.trim().endsWith('?') ? 'undefined' : null)
 	});
@@ -220,7 +221,7 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 		return module;
 	}
 
-	const retryList: ScaffModuleRetry[] = []; 
+	const retryList: ScaffModuleRetry[] = [];
 	let retryCount = 0;
 	let retryLastLen = 0;
 	let retryLen = 0;
@@ -229,7 +230,7 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 		const filePath = file.isIndex ? file.path : `${file.path}/${file.name}`;
 		const lines = file.content.split('\n');
 		let i = 0;
-		
+
 		while (i < lines.length) {
 			if (!lines[i]) {
 				i++;
@@ -260,17 +261,17 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 
 				const funcCode = funcLines.join('\n');
 				const match = funcCode.match(/export function (\w+)/);
-				
+
 				if (match) {
 					const name = match[1]!;
 
-					if (!module[filePath]) 
+					if (!module[filePath])
 						module[filePath] = {};
-					
+
 					const body = funcCode.slice(funcCode.indexOf("{")).trim();
 					const params = parseFnParams(funcCode);
 					const parsedStr = `function ${name}(${params.combined.join(", ")}) ${body}`;
-					
+
 					module[filePath][name] = { name, value: body.slice(1, -1), type: 'function', parsedStr };
 
 					//file.content = file.content.replace(funcCode, "");
@@ -286,7 +287,7 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 
 					classLines.push(l);
 					braceCount += countBraces(l!);
-					
+
 					if (braceCount <= 0 && (l?.trim().endsWith('}') || l?.trim().includes(';'))) break;
 				}
 
@@ -299,21 +300,21 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 					const name = match[1]!;
 					const constructor = classCode.match(/constructor\s*\(([^)]*)\)/)?.[1] ?? "()";
 
-					if (!module[filePath]) 
+					if (!module[filePath])
 						module[filePath] = {};
 
 					// Extract class body
 					const bodyMatch = classCode.match(/{([\s\S]*)}/);
 					let classBody = bodyMatch ? bodyMatch[1] : '';
-					
+
 					// Remove constructor line
 					if (classBody) {
 						classBody = classBody.replace(/^\s*constructor\s*\([^)]*\)\s*\n?/m, '');
 						classBody = convertClassMethods(classBody);
-	
+
 						if (classBody.includes("=>")) {
 							const argsMatch = classBody.match(/\([^)]*\)\s*=>/)?.[0];
-							
+
 							if (argsMatch)
 								classBody = classBody.replace(argsMatch, `function${argsMatch.replace("=>", "").replaceAll("?", " = undefined").trimEnd()}`);
 						}
@@ -334,7 +335,7 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 
 					interfaceLines.push(l);
 					braceCount += countBraces(l!);
-					
+
 					if (braceCount <= 0 && (l?.trim().endsWith('}') || l?.trim().includes(';'))) break;
 				}
 
@@ -342,11 +343,11 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 
 				const interfaceCode = interfaceLines.join('\n');
 				const match = interfaceCode.match(/export interface (\w+)/);
-				
+
 				if (match) {
 					const name = match[1]!;
 
-					if (!module[filePath]) 
+					if (!module[filePath])
 						module[filePath] = {};
 
 					const member = getObjectMembers(module, retryList, filePath, name, interfaceCode);
@@ -365,7 +366,7 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 
 					enumLines.push(l);
 					braceCount += countBraces(l!);
-					
+
 					if (braceCount <= 0 && (l?.trim().endsWith('}') || l?.trim().includes(';'))) break;
 				}
 
@@ -374,13 +375,13 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 				const constEnum = line.startsWith('export const enum ');
 				const enumCode = enumLines.join('\n');
 				const match = !constEnum
-					? enumCode.match(/export enum (\w+)/) 
+					? enumCode.match(/export enum (\w+)/)
 					: enumCode.match(/export const enum (\w+)/);
 
 				if (match) {
 					const name = match[1]!;
 
-					if (!module[filePath]) 
+					if (!module[filePath])
 						module[filePath] = {};
 
 					const parsedStr = enumCode.replace(!constEnum ? "export " : "export const ", "").replace("?", " = undefined");
@@ -398,15 +399,15 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 					const l = lines[j];
 					typeLines.push(l);
 
-					if (l?.includes('{')) 
+					if (l?.includes('{'))
 						hasBrace = true;
-					
+
 					braceCount += countBraces(l!);
-					
-					if (!hasBrace && l?.includes(';')) 
+
+					if (!hasBrace && l?.includes(';'))
 						break;
-					
-					if (hasBrace && braceCount <= 0 && (l?.trim().endsWith('}') || l?.trim().includes(';'))) 
+
+					if (hasBrace && braceCount <= 0 && (l?.trim().endsWith('}') || l?.trim().includes(';')))
 						break;
 				}
 				i = j + 1;
@@ -417,7 +418,7 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 				if (match) {
 					const name = match[1]!;
 
-					if (!module[filePath]) 
+					if (!module[filePath])
 						module[filePath] = {};
 
 					const member = getObjectMembers(module, retryList, filePath, name, typeCode, true);
@@ -434,7 +435,7 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 					const valuePart = parts.slice(1).join(' = ').trim().replace(/;$/, '');
 					const valueType = inferType(valuePart);
 					let name = decl?.replace(/^export\s+(const|let|var)?\s*/, '').trim();
-					
+
 					if (valuePart.includes('=>')) {
 						// Arrow function
 						if (valuePart.trim().endsWith('{')) {
@@ -459,17 +460,17 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 
 							/*let header = decl.replace("export ", "");
 
-							if (header.startsWith("const ")) 
+							if (header.startsWith("const "))
 								header = header.replace("const ", "");
-							if (header.startsWith("let ")) 
+							if (header.startsWith("let "))
 								header = header.replace("let ", "");
-							if (header.startsWith("var ")) 
+							if (header.startsWith("var "))
 								header = header.replace("var ", "");*/
-		
+
 							const params = parseFnParams(valuePart);
 							const parsedStr = `${name} = function(${params.combined.join(", ")}) ${arrowBlock}`;
 
-							if (!module[filePath]) 
+							if (!module[filePath])
 								module[filePath] = {};
 
 							module[filePath][name] = { name, value: arrowBlock.slice(1, -1), type: 'arrow-fn', /*header, blockValue: arrowBlock,*/ parsedStr };
@@ -477,18 +478,18 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 							// Single line arrow function
 							/*let header = decl.replace("export ", "");
 
-							if (header.startsWith("const ")) 
+							if (header.startsWith("const "))
 								header = header.replace("const ", "");
-							if (header.startsWith("let ")) 
+							if (header.startsWith("let "))
 								header = header.replace("let ", "");
-							if (header.startsWith("var ")) 
+							if (header.startsWith("var "))
 								header = header.replace("var ", "");*/
 
 							const params = parseFnParams(valuePart);
 							const body = valuePart.split('=>')[1]!.trim();
 							const parsedStr = `${name} = function(${params.combined.join(", ")}) { return ${body}; }`;
 
-							if (!module[filePath]) 
+							if (!module[filePath])
 								module[filePath] = {};
 
 							module[filePath][name] = { name, value: body, type: 'arrow-fn', /*header, blockValue: body,*/ parsedStr };
@@ -517,18 +518,18 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 
 							/*let header = decl.replace("export ", "");
 
-							if (header.startsWith("const ")) 
+							if (header.startsWith("const "))
 								header = header.replace("const ", "");
-							if (header.startsWith("let ")) 
+							if (header.startsWith("let "))
 								header = header.replace("let ", "");
-							if (header.startsWith("var ")) 
+							if (header.startsWith("var "))
 								header = header.replace("var ", "");*/
 
 							const params = parseFnParams(valuePart);
 							const parsedStr = `${name} = function(${params.combined.join(", ")}) ${funcBlock}`;
 							//const parsedStr = `${name} = ${valuePart.replace(/{\s*$/, funcBlock)}`;
 
-							if (!module[filePath]) 
+							if (!module[filePath])
 								module[filePath] = {};
 
 							module[filePath][name] = { name, value: funcBlock.slice(1, -1), type: 'method', /*header, blockValue: funcBlock,*/ parsedStr };
@@ -536,16 +537,16 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 							// Single line function expression (unlikely)
 							/*let header = decl.replace("export ", "");
 
-							if (header.startsWith("const ")) 
+							if (header.startsWith("const "))
 								header = header.replace("const ", "");
-							if (header.startsWith("let ")) 
+							if (header.startsWith("let "))
 								header = header.replace("let ", "");
-							if (header.startsWith("var ")) 
+							if (header.startsWith("var "))
 								header = header.replace("var ", "");*/
 
 							const parsedStr = `${name} = ${valuePart}`;
 
-							if (!module[filePath]) 
+							if (!module[filePath])
 								module[filePath] = {};
 
 							module[filePath][name] = { name, value: line.replace("export ", ""), type: 'method', /*header, blockValue: valuePart,*/ parsedStr };
@@ -554,22 +555,22 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 						// Variable
 						let varType: 'const' | 'let' | 'var' = 'var';
 
-						if (decl?.includes('const')) 
+						if (decl?.includes('const'))
 							varType = 'const';
-						else if (decl?.includes('let')) 
+						else if (decl?.includes('let'))
 							varType = 'let';
-						else if (decl?.includes('var')) 
+						else if (decl?.includes('var'))
 							varType = 'var';
 
 						const noVarKeyword = varType === 'var' && !parts[0]!.includes('var');
 
-						if (!module[filePath]) 
+						if (!module[filePath])
 							module[filePath] = {};
 
 						const parsedStr = (varType !== "const")
 							? (`${varType === "let" ? '' : 'var '}${name} = ${valuePart};`)
 							: `#macro ${name} ${valuePart}`;
-						
+
 						module[filePath][name] = { name, value: valuePart, type: (varType === "const" ? "constant" : "variable"), parsedStr };
 					}
 				}
@@ -582,14 +583,14 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 	retryLen = retryList.length;
 	while (retryCount < 10 && retryLastLen !== retryLen) {
 		for (const retry of retryList) {
-			if (!module[retry.filePath]) 
+			if (!module[retry.filePath])
 				continue;
 
-			if (!module[retry.filePath]![retry.targetName]) 
+			if (!module[retry.filePath]![retry.targetName])
 				continue;
 
 			switch (module[retry.filePath]![retry.name]!.type) {
-				case 'interface': 
+				case 'interface':
 					const currInterface = module[retry.filePath]![retry.name] as ScaffModuleInterface;
 					const extendsInterface = module[retry.filePath]![retry.targetName] as ScaffModuleInterface;
 
@@ -598,7 +599,7 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 					}
 					break;
 
-				case 'type': 
+				case 'type':
 					const currType = module[retry.filePath]![retry.name] as ScaffModuleType;
 					const extendsType = module[retry.filePath]![retry.targetName] as ScaffModuleType;
 
@@ -615,4 +616,151 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 	}
 
 	return module;
+}
+
+export function reexportModule(module: ScaffModuleStore, file: ScaffFile, config: ScaffConfig) {
+	const reexportMatches = [...file.content.matchAll(modControlRegex)]
+		.filter((match) => match.groups?.cmd === "export")
+
+	if (!reexportMatches.length)
+		return false;
+
+	for (const match of reexportMatches) {
+		const { cmd, mod, /*src,*/ path } = match.groups!;
+
+		if (!(cmd && mod /*&& src*/ && path)) {
+			log.error(
+				`Invalid module control statement: \x1b[34m${cmd} ${mod} from ${path}\x1b[0m in \x1b[33m${file.name}\x1b[0m from \x1b[32m${file.path}\x1b[0m. Aborting...`,
+			);
+
+			return false;
+		}
+
+		const fromPath = normalizePath(
+			resolveImportPath(file.path, path.slice(1, -1), config),
+		);
+		const thisPath = file.isIndex ? file.path : `${file.path}/${file.name}`;
+		const alias: Record<string, string> = {};
+
+		if (mod === "*" || (mod.startsWith("{") && mod.endsWith("}"))) {
+			const targetMods =
+				mod === "*"
+					? null
+					: mod
+							.slice(1, -1)
+							.split(",")
+							.map((m) => {
+								const split = m.split(":");
+								const key = split[0]!.trim();
+
+								if (split.length === 1) alias[key] = key;
+								else alias[key] = split[1]!.trim();
+
+								if (!module[fromPath]) {
+									if (config.onNotFound === "error") {
+										log.error(
+											`Path \x1b[33m${fromPath}\x1b[0m doesn't have any exported modules. Aborting...`,
+										);
+
+										return false;
+									} else
+										log.warn(
+											`Path \x1b[33m${fromPath}\x1b[0m doesn't have any exported modules. Skipping this module...`,
+										);
+
+									return false;
+								}
+
+								if (!module[fromPath][key]) {
+									if (config.onNotFound === "error") {
+										log.error(
+											`Module \x1b[33m${key}\x1b[0m from \x1b[32m${fromPath}\x1b[0m not found. Aborting...`,
+										);
+
+										return false;
+									} else
+										log.warn(
+											`Module \x1b[33m${key}\x1b[0m from \x1b[32m${fromPath}\x1b[0m not found. Skipping this module...`,
+										);
+
+									return false;
+								}
+
+								return key;
+							})
+							.filter(Boolean);
+
+			if (!module[fromPath]) {
+				if (config.onNotFound === "error") {
+					log.error(
+						`Path \x1b[33m${fromPath}\x1b[0m doesn't have any exported modules. Aborting...`,
+					);
+
+					return false;
+				} else
+					log.warn(
+						`Path \x1b[33m${fromPath}\x1b[0m doesn't have any exported modules. Skipping this module...`,
+					);
+
+				return false;
+			}
+
+			Object.entries(module[fromPath]).forEach(([key, value]) => {
+				if (!module[thisPath]) module[thisPath] = {};
+
+				if (mod === "*")
+					module[thisPath][key] = value;
+				else if (targetMods!.includes(key)) {
+					const usingAlias = key in alias && alias[key] !== key;
+
+					if (usingAlias)
+						module[thisPath][`@${alias[key]}`] = value;
+					else
+						module[thisPath][key] = value;
+				}
+			});
+		}
+		else {
+			if (!module[fromPath]) {
+				if (config.onNotFound === "error") {
+					log.error(
+						`Path \x1b[33m${fromPath}\x1b[0m doesn't have any exported modules. Aborting...`,
+					);
+
+					return false;
+				} else
+					log.warn(
+						`Path \x1b[33m${fromPath}\x1b[0m doesn't have any exported modules. Skipping this module...`,
+					);
+
+				return false;
+			}
+
+			if (!module[fromPath][mod]) {
+				if (config.onNotFound === "error") {
+					log.error(
+						`Module \x1b[33m${mod}\x1b[0m from \x1b[32m${fromPath}\x1b[0m not found. Aborting...`,
+					);
+
+					return false;
+				} else
+					log.warn(
+						`Module \x1b[33m${mod}\x1b[0m from \x1b[32m${fromPath}\x1b[0m not found. Skipping this module...`,
+					);
+
+				return false;
+			}
+
+			if (!module[thisPath])
+				module[thisPath] = {};
+
+			module[thisPath][mod] = module[fromPath][mod];
+		}
+
+		// console.log(
+		// 	`module from ${thisPath}: ${JSON.stringify(module[thisPath], null, 2)}`,
+		// );
+	}
+
+	return true;
 }

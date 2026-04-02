@@ -6,6 +6,6 @@ impl MyClass {
 	}
 
 	static const static_method = (name?) => {
-		show_debug_message($"Hello, {name}! {");
+		show_debug_message($"Hello, {name}!");
 	}
 }
