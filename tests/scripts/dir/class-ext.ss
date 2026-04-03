@@ -11,9 +11,11 @@ impl MyClass {
 impl Test {
     static created_count = 0;
 
-    static create() {
-        Test.created_count++;
-        return new Test();
+    static create(_new?) {
+        if (_new == undefined) {
+            Test.created_count++;
+            return new Test();
+        }
     }
 
 

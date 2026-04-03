@@ -357,15 +357,19 @@ export async function implementModules(
 					for (const [idx, [_, include]] of modIterator) {
 						if (idx > 0)
 							switch (include.value.type) {
-								case "object":
-								case "method":
-								case "array":
+								case "function":
+								case "class":
+								case "type":
+								case "interface":
 								case "enum":
 									toReplace += "\n";
 									break;
 							}
 
-						toReplace += include.value.parsedStr + "\n";
+						if (include.value.type === "class")
+							toReplace += `${include.value.declaration} {\n${include.value.body}\n}`;
+						else
+							toReplace += include.value.parsedStr + "\n";
 
 						if (idx === modLen - 1) toReplace += "\n";
 					}
@@ -431,12 +435,15 @@ export async function implementModules(
 								tabChar,
 							);
 
-							parsedStr =
-								module[mod.targetPath!]![
-									`@${contentMod}` in module[mod.targetPath!]!
-										? `@${contentMod}`
-										: contentMod
-								]!.parsedStr;
+							const usedMod = module[mod.targetPath!]![
+								`@${contentMod}` in module[mod.targetPath!]!
+									? `@${contentMod}`
+									: contentMod
+							];
+
+							parsedStr = usedMod?.type !== "class"
+								? usedMod?.parsedStr ?? ""
+								: `${usedMod?.declaration} {\n${usedMod?.body}\n}`;
 
 							if (tabCnt > 0) {
 								const tabLevels = getTabLevels(parsedStr, config.tabType).map(

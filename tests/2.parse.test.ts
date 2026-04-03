@@ -40,9 +40,9 @@ describe("Process Scaff files", async () => {
 		expect(res).toBeDefined();
 
 		if (!res) return;
-		
+
 		expect(
-			getChildCount(res.generate, true) + 
+			getChildCount(res.generate, true) +
 			getChildCount(res.scaff, true) +
 			res.normal.length
 		).toBe(files.length /*+ 2*/);

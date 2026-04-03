@@ -5,6 +5,8 @@ import type {
 	ScaffModuleStore,
 	ScaffModuleInterface,
 	ScaffModuleType,
+	ScaffModuleClass,
+	ScaffModuleEnum,
 	ScaffModuleRetry
 } from "@types";
 
@@ -152,6 +154,8 @@ function countBraces(line: string): number {
  * @returns Object with function parameter names, defaults and combined
  */
 export function parseFnParams(str: string) {
+	fnParamsRegex.lastIndex = 0;
+
 	const match = str.match(fnParamsRegex);
 	let names: string[] = [];
 	let defaults: (string | null | undefined)[] = [];
@@ -183,11 +187,13 @@ export function parseFnParams(str: string) {
  * @returns Converted class body
  */
 export function convertClassMethods(classBody: string): string {
+	// Avoid converting language keywords that look like methods inside implementation bodies
+	const reservedMethodNames = new Set(['if', 'for', 'while', 'switch', 'catch', 'do', 'else', 'try', 'finally']);
 	const methodRegex = /(\w+)\s*\(([^)]*)\)\s*{([\s\S]*?)}/g;
 
 	return classBody.replace(methodRegex, (match, methodName, params, body) => {
 		// Avoid converting if it's part of a function expression like print = function() {
-		if (methodName === 'function') return match;
+		if (methodName === 'function' || reservedMethodNames.has(methodName)) return match;
 		return `${methodName} = function(${params.replaceAll("?", " = undefined")}) {${body}}`;
 	});
 }
@@ -272,7 +278,11 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 					const params = parseFnParams(funcCode);
 					const parsedStr = `function ${name}(${params.combined.join(", ")}) ${body}`;
 
-					module[filePath][name] = { name, value: body.slice(1, -1), type: 'function', parsedStr };
+					module[filePath][name] = {
+						name, value: body.slice(1, -1), type: 'function', parsedStr,
+						header: funcCode.slice(0, funcCode.indexOf("{")).trim(),
+						blockValue: insertTabs(1, config.tabType) + body.slice(1, -1)
+					};
 
 					//file.content = file.content.replace(funcCode, "");
 				}
@@ -322,7 +332,11 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 
 					const parsedStr = `function ${name}(${constructor.replaceAll("?", " = undefined")}) constructor {\n${insertTabs(1, config.tabType)}${classBody}\n}`;
 
-					module[filePath][name] = { name, value: classCode.replace("export ", ""), type: 'class', parsedStr };
+					module[filePath][name] = {
+						name, value: classCode.replace("export ", ""), type: 'class', parsedStr,
+						declaration: `function ${name}(${constructor.replaceAll("?", " = undefined")}) constructor`,
+						body: `${insertTabs(1, config.tabType)}${classBody}`,
+					} as ScaffModuleClass;
 				}
 			} else if (line.startsWith('export interface ')) {
 				// Collect multiline interface
@@ -473,7 +487,11 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 							if (!module[filePath])
 								module[filePath] = {};
 
-							module[filePath][name] = { name, value: arrowBlock.slice(1, -1), type: 'arrow-fn', /*header, blockValue: arrowBlock,*/ parsedStr };
+							module[filePath][name] = {
+								name, value: arrowBlock.slice(1, -1), type: 'function',
+								header: `${name} = function(${params.combined.join(", ")})`,
+								blockValue: arrowBlock, parsedStr
+							};
 						} else {
 							// Single line arrow function
 							/*let header = decl.replace("export ", "");
@@ -492,7 +510,11 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 							if (!module[filePath])
 								module[filePath] = {};
 
-							module[filePath][name] = { name, value: body, type: 'arrow-fn', /*header, blockValue: body,*/ parsedStr };
+							module[filePath][name] = {
+								name, value: body, type: 'function',
+								header: `${name} = function(${params.combined.join(", ")})`,
+								blockValue: body, parsedStr
+						};
 						}
 					} else if (valuePart.startsWith('function')) {
 						// Function expression
@@ -532,7 +554,11 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 							if (!module[filePath])
 								module[filePath] = {};
 
-							module[filePath][name] = { name, value: funcBlock.slice(1, -1), type: 'method', /*header, blockValue: funcBlock,*/ parsedStr };
+							module[filePath][name] = {
+								name, value: funcBlock.slice(1, -1), type: 'function',
+								header: `${name} = function(${params.combined.join(", ")})`,
+								blockValue: funcBlock, parsedStr
+							};
 						} else {
 							// Single line function expression (unlikely)
 							/*let header = decl.replace("export ", "");
@@ -544,12 +570,17 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 							if (header.startsWith("var "))
 								header = header.replace("var ", "");*/
 
+							const params = parseFnParams(valuePart);
 							const parsedStr = `${name} = ${valuePart}`;
 
 							if (!module[filePath])
 								module[filePath] = {};
 
-							module[filePath][name] = { name, value: line.replace("export ", ""), type: 'method', /*header, blockValue: valuePart,*/ parsedStr };
+							module[filePath][name] = {
+								name, value: line.replace("export ", ""), type: 'function',
+								header: `${name} = function(${params.combined.join(", ")})`,
+								blockValue: valuePart, parsedStr
+							};
 						}
 					} else {
 						// Variable
@@ -562,7 +593,7 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 						else if (decl?.includes('var'))
 							varType = 'var';
 
-						const noVarKeyword = varType === 'var' && !parts[0]!.includes('var');
+						//const noVarKeyword = varType === 'var' && !parts[0]!.includes('var');
 
 						if (!module[filePath])
 							module[filePath] = {};

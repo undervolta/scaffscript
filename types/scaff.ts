@@ -38,6 +38,8 @@ export type ScaffModuleStore = {
 	[filePathName: string]: {
 		[exportName: string]:		// use `@` prefix for the module usage to avoid conflict with built-in keywords
 			| ScaffModuleConst
+			| ScaffModuleClass
+			| ScaffModuleEnum
 			| ScaffModuleFunction
 			| ScaffModuleInterface
 			| ScaffModuleType
@@ -53,20 +55,36 @@ export type ScaffModuleT = {
 };
 
 export type ScaffModuleDefault = {
+	type: "unknown";
 	parsedStr: string;
 } & ScaffModuleT;
 
 export type ScaffModuleConst = {
+	type: "constant";
+	parsedStr: string;
+} & ScaffModuleT;
+
+export type ScaffModuleClass = {
+	type: "class";
+	declaration: string;
+	body: string;
+	parsedStr: string;
+} & ScaffModuleT;
+
+export type ScaffModuleEnum = {
+	type: "enum";
 	parsedStr: string;
 } & ScaffModuleT;
 
 export type ScaffModuleFunction = {
+	type: "function";
 	header: string;
 	blockValue: string;
 	parsedStr: string;
 } & ScaffModuleT;
 
 export type ScaffModuleInterface = {
+	type: "interface";
 	member: {
 		[name: string]: {
 			type: "any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum";
@@ -77,6 +95,7 @@ export type ScaffModuleInterface = {
 } & ScaffModuleT;
 
 export type ScaffModuleType = {
+	type: "type";
 	member: {
 		[name: string]: {
 			type: "any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum";
@@ -87,20 +106,23 @@ export type ScaffModuleType = {
 } & ScaffModuleT;
 
 export type ScaffModuleVar = {
+	type: "variable";
 	parsedStr: string;
 } & ScaffModuleT;
 
-export type ScaffModuleRetry = { 
-	filePath: string, 
-	name: string, 
+export type ScaffModuleRetry = {
+	filePath: string,
+	name: string,
 	targetName: string
 };
 
 export type ScaffModule = {
 	name: string;
-	as: string; 
-	value: 
+	as: string;
+	value:
 		| ScaffModuleConst
+		| ScaffModuleClass
+		| ScaffModuleEnum
 		| ScaffModuleFunction
 		| ScaffModuleInterface
 		| ScaffModuleType
@@ -138,12 +160,12 @@ export type ScaffIntegrationBlockFlags = Partial<{
 	prod: true;
 	production: true;
 	skip: true;
-} & 
+} &
 	Record<ScaffIntegrationTargetAllPlatform, true>
 >;
 
 export type ScaffIntegrationTargetPlatform =
-	| "all" 
+	| "all"
 	| "android"
 	| "gxgames"
 	| "html5"
@@ -182,7 +204,7 @@ export type ScaffIntegrationTargetPlatformExclusion =
 ;
 
 export type ScaffIntegrationTargetAllPlatform =
-	| ScaffIntegrationTargetPlatform 
+	| ScaffIntegrationTargetPlatform
 	| ScaffIntegrationTargetPlatformExclusion
 ;
 

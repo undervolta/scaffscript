@@ -19,7 +19,7 @@ import { Test } from "./class/Test"
 
 /// won't removed
 show_debug_message($"y = @:y, z = @valueof z, STRING = {@nameof STRING}");
-include * from "./const"
+//include * from "./const"
 
 var inst = new MyClass("John", 20);
 inst.print();
