@@ -188,7 +188,7 @@ export function parseFnParams(str: string) {
  */
 export function convertClassMethods(classBody: string): string {
 	// Avoid converting language keywords that look like methods inside implementation bodies
-	const reservedMethodNames = new Set(['if', 'for', 'while', 'switch', 'catch', 'do', 'else', 'try', 'finally']);
+	const reservedMethodNames = new Set(['if', 'for', 'while', 'switch', 'catch', 'do', 'until', 'else', 'try', 'finally', 'repeat', 'with', 'throw']);
 	const methodRegex = /(\w+)\s*\(([^)]*)\)\s*{([\s\S]*?)}/g;
 
 	return classBody.replace(methodRegex, (match, methodName, params, body) => {
