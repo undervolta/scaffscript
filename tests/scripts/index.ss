@@ -1,6 +1,5 @@
 intg * to "./tests/ScaffScript/scripts/MyFolder/scMyScript"
 
-include { y, z, STRING, method } from "./script1"
 import * from "./script1"
 import { MyClass } from "./script2"
 import { Test } from "./class/Test"
@@ -15,7 +14,8 @@ import { Test } from "./class/Test"
  * @param y The second parameter.
  * @returns The sum of x and y.
  */
-@content method
+//@content method
+var my_func = @valueof test_function
 
 /// won't removed
 show_debug_message($"y = @:y, z = @valueof z, STRING = {@nameof STRING}");

@@ -514,7 +514,7 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 								name, value: body, type: 'function',
 								header: `${name} = function(${params.combined.join(", ")})`,
 								blockValue: body, parsedStr
-						};
+							};
 						}
 					} else if (valuePart.startsWith('function')) {
 						// Function expression
@@ -678,48 +678,48 @@ export function reexportModule(module: ScaffModuleStore, file: ScaffFile, config
 				mod === "*"
 					? null
 					: mod
-							.slice(1, -1)
-							.split(",")
-							.map((m) => {
-								const split = m.split(":");
-								const key = split[0]!.trim();
+						.slice(1, -1)
+						.split(",")
+						.map((m) => {
+							const split = m.split(":");
+							const key = split[0]!.trim();
 
-								if (split.length === 1) alias[key] = key;
-								else alias[key] = split[1]!.trim();
+							if (split.length === 1) alias[key] = key;
+							else alias[key] = split[1]!.trim();
 
-								if (!module[fromPath]) {
-									if (config.onNotFound === "error") {
-										log.error(
-											`Path \x1b[33m${fromPath}\x1b[0m doesn't have any exported modules. Aborting...`,
-										);
-
-										return false;
-									} else
-										log.warn(
-											`Path \x1b[33m${fromPath}\x1b[0m doesn't have any exported modules. Skipping this module...`,
-										);
+							if (!module[fromPath]) {
+								if (config.onNotFound === "error") {
+									log.error(
+										`Path \x1b[33m${fromPath}\x1b[0m doesn't have any exported modules. Aborting...`,
+									);
 
 									return false;
-								}
+								} else
+									log.warn(
+										`Path \x1b[33m${fromPath}\x1b[0m doesn't have any exported modules. Skipping this module...`,
+									);
 
-								if (!module[fromPath][key]) {
-									if (config.onNotFound === "error") {
-										log.error(
-											`Module \x1b[33m${key}\x1b[0m from \x1b[32m${fromPath}\x1b[0m not found. Aborting...`,
-										);
+								return false;
+							}
 
-										return false;
-									} else
-										log.warn(
-											`Module \x1b[33m${key}\x1b[0m from \x1b[32m${fromPath}\x1b[0m not found. Skipping this module...`,
-										);
+							if (!module[fromPath][key]) {
+								if (config.onNotFound === "error") {
+									log.error(
+										`Module \x1b[33m${key}\x1b[0m from \x1b[32m${fromPath}\x1b[0m not found. Aborting...`,
+									);
 
 									return false;
-								}
+								} else
+									log.warn(
+										`Module \x1b[33m${key}\x1b[0m from \x1b[32m${fromPath}\x1b[0m not found. Skipping this module...`,
+									);
 
-								return key;
-							})
-							.filter(Boolean);
+								return false;
+							}
+
+							return key;
+						})
+						.filter(Boolean);
 
 			if (!module[fromPath]) {
 				if (config.onNotFound === "error") {

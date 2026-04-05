@@ -213,46 +213,46 @@ export async function getModuleUsage(
 						mod === "*"
 							? null
 							: mod
-									.slice(1, -1)
-									.split(",")
-									.map((m) => {
-										const split = m.split(":");
-										const key = split[0]!.trim();
+								.slice(1, -1)
+								.split(",")
+								.map((m) => {
+									const split = m.split(":");
+									const key = split[0]!.trim();
 
-										if (split.length === 1) alias[key] = key;
-										else alias[key] = split[1]!.trim();
+									if (split.length === 1) alias[key] = key;
+									else alias[key] = split[1]!.trim();
 
-										if (!module[fromPath]) {
-											if (config.onNotFound === "error") {
-												log.error(
-													`Path \x1b[33m${fromPath}\x1b[0m doesn't have any exported modules. Aborting...`,
-												);
-												isInvalid = true;
-											} else
-												log.warn(
-													`Path \x1b[33m${fromPath}\x1b[0m doesn't have any exported modules. Skipping this module...`,
-												);
+									if (!module[fromPath]) {
+										if (config.onNotFound === "error") {
+											log.error(
+												`Path \x1b[33m${fromPath}\x1b[0m doesn't have any exported modules. Aborting...`,
+											);
+											isInvalid = true;
+										} else
+											log.warn(
+												`Path \x1b[33m${fromPath}\x1b[0m doesn't have any exported modules. Skipping this module...`,
+											);
 
-											return null;
-										}
+										return null;
+									}
 
-										if (!module[fromPath][key]) {
-											if (config.onNotFound === "error") {
-												log.error(
-													`Module \x1b[33m${key}\x1b[0m from \x1b[32m${fromPath}\x1b[0m not found. Aborting...`,
-												);
-												isInvalid = true;
-											} else
-												log.warn(
-													`Module \x1b[33m${key}\x1b[0m from \x1b[32m${fromPath}\x1b[0m not found. Skipping this module...`,
-												);
+									if (!module[fromPath][key]) {
+										if (config.onNotFound === "error") {
+											log.error(
+												`Module \x1b[33m${key}\x1b[0m from \x1b[32m${fromPath}\x1b[0m not found. Aborting...`,
+											);
+											isInvalid = true;
+										} else
+											log.warn(
+												`Module \x1b[33m${key}\x1b[0m from \x1b[32m${fromPath}\x1b[0m not found. Skipping this module...`,
+											);
 
-											return null;
-										}
+										return null;
+									}
 
-										return key;
-									})
-									.filter(Boolean);
+									return key;
+								})
+								.filter(Boolean);
 
 					Object.entries(module[fromPath]).forEach(([key, value]) => {
 						if (mod === "*")
@@ -420,6 +420,11 @@ export async function implementModules(
 						);
 
 					let parsedStr = "";
+					const usedMod = module[mod.targetPath!]![
+						`@${contentMod}` in module[mod.targetPath!]!
+							? `@${contentMod}`
+							: contentMod
+					];
 
 					switch (contentCmd) {
 						case "content":
@@ -434,12 +439,6 @@ export async function implementModules(
 								match[0]!,
 								tabChar,
 							);
-
-							const usedMod = module[mod.targetPath!]![
-								`@${contentMod}` in module[mod.targetPath!]!
-									? `@${contentMod}`
-									: contentMod
-							];
 
 							parsedStr = usedMod?.type !== "class"
 								? usedMod?.parsedStr ?? ""
@@ -493,12 +492,14 @@ export async function implementModules(
 							break;
 
 						case "valueof":
-							parsedStr =
-								module[mod.targetPath!]![
-									`@${contentMod}` in module[mod.targetPath!]!
-										? `@${contentMod}`
-										: contentMod
-								]!.value;
+							if (usedMod?.type === "function") {
+								console.log(`parsedStr: ${usedMod.parsedStr}`)
+								parsedStr = usedMod.parsedStr.trimStart().startsWith("function")
+									? `function${usedMod.parsedStr.slice(usedMod.parsedStr.indexOf("("))}`
+									: usedMod.parsedStr.slice(usedMod.parsedStr.indexOf("=") + 1).trim();
+							}
+							else
+								parsedStr = usedMod?.value ?? "";
 
 							file.content = file.content.replace(
 								`@valueof ${contentMod}`,
