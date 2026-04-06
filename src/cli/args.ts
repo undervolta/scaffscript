@@ -68,10 +68,10 @@ export async function parseArgs(...args: string[]): Promise<CLIResult | null> {
 			console.log(`\x1b[34m[args]\x1b[0m:     Optional arguments.`);
 			console.log("");
 			console.log("Commands:");
-			console.log("  generate <source_path> <project_path>      Generate source code from the given path to the given project");
+			console.log("  generate <project_path>      		Generate source code from the given path to the given project");
 			console.log("    aliases: gen");
-			console.log("    example: generate ./src ./my-game.yyp");
-			console.log("  help                                       Show this help message");
+			console.log("    example: generate ./my-game.yyp");
+			console.log("  help                                 Show this help message");
 			console.log("    aliases: -h, --help");
 			console.log("");
 			
