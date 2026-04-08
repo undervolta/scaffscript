@@ -20,6 +20,7 @@ var my_func = @valueof test_function
 /// won't removed
 show_debug_message($"y = @:y, z = @valueof z, STRING = {@nameof STRING}");
 //include * from "./const"
+include { "alias" } from "./class"
 
 var inst = new MyClass("John", 20);
 inst.print();

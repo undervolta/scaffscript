@@ -164,8 +164,9 @@ export async function getModuleUsage(
 
 						for (const f of files) {
 							const filePath = normalizePath(
-								resolvePath(`${file.path}/${f.slice(1, -1)}`),
+								resolveImportPath(file.path, `${path.slice(1, -1)}/${f.slice(1, -1)}`, config)
 							);
+							
 							const targetFile = fileGroup.normal.find((fl) => {
 								let targetFile = `${fl.path}/${fl.name}`;
 								let currFile = filePath;
