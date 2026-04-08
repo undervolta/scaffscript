@@ -56,7 +56,7 @@ The returned config is fully defaulted in code. Contributors adding new config f
 The scanner:
 
 1. Recursively traverses the configured source directory.
-2. Includes only `.ss` and `.gml` files.
+2. Includes only `.scaff` and `.gml` files.
 3. Ignores files whose names start with `_`.
 4. Ignores directories whose path segments start with `_`.
 
@@ -69,9 +69,9 @@ The discovered record is converted into `ScaffFile`, which is the shared mutable
 1. Reads file contents.
 2. Normalizes line endings to `\n`.
 3. Detects whether a file contains generation statements (`intg ... to ...`).
-4. Rewrites `.ss` file content using special values.
-5. Renames `.ss` file records by stripping the `.ss` extension.
-6. Detects `index.ss` and delays those files so they are processed later.
+4. Rewrites `.scaff` file content using special values.
+5. Renames `.scaff` file records by stripping the `.scaff` extension.
+6. Detects `index.scaff` and delays those files so they are processed later.
 7. Detects exports and `impl` usage to decide processing order and parent-child relationships.
 
 The output is a `ScaffFileGroup`:

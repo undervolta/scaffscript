@@ -14,13 +14,13 @@ A minimal superset language of **GameMaker Language** (GML) for creating module-
 
 ## Key Features
 
-- **TypeScript-like Module System**. Use `export`, `import`, and `include` to organize code across `.ss` files, fully resolved at compile-time.
+- **TypeScript-like Module System**. Use `export`, `import`, and `include` to organize code across `.scaff` files, fully resolved at compile-time.
 - **Class Syntax**. Define classes with constructors, properties, and methods that compile to GML struct constructors. Extend classes across files with `impl`.
 - **Content Directives**. Inline compiled GML content (`@content`, `@valueof`, `@:`, etc.) directives for dynamic code insertion.
 - **Special Values**. Access compile-time tokens like `@now`, `@today`, `@version`, `@file`, and `@line` for metadata and debugging.
 - **Code Generation Blocks**. Use `#[blockName]` to define named content sections and `intg` to map them to GameMaker asset paths.
 - **GameMaker Integration**. Automatically writes `.gml` files, generates `.yy` metadata, and updates your `.yyp` project file for scripts and objects.
-- **File Scanning & Processing**. Recursive scanning of `.ss` and `.gml` files with dependency-aware processing order.
+- **File Scanning & Processing**. Recursive scanning of `.scaff` and `.gml` files with dependency-aware processing order.
 
 ---
 

@@ -40,7 +40,7 @@ The module store key is not just the file name. It is effectively a normalized s
 1. For regular files: `path/name`
 2. For index files: `path`
 
-This is important because `index.ss` behaves as the module identity for its directory.
+This is important because `index.scaff` behaves as the module identity for its directory.
 
 Re-exports are merged into the current file's module namespace by [`reexportModule()`](../src/parser/export-module.ts). Aliases are stored using an `@`-prefixed synthetic key to avoid collisions with built-in terms.
 

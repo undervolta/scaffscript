@@ -67,24 +67,24 @@ export async function findConfig(filename: string) {
  * @returns Array of ScaffFile
  */
 export async function getScaffFiles(path: string): Promise<ScaffFile[]> {
-	log.debug(`Scanning for \x1b[34m*.ss\x1b[0m and \x1b[34m*.gml\x1b[0m files in \x1b[32m${path}\x1b[0m...`);
+	log.debug(`Scanning for \x1b[34m*.scaff\x1b[0m and \x1b[34m*.gml\x1b[0m files in \x1b[32m${path}\x1b[0m...`);
 	const files = await readdir(path, { withFileTypes: true, recursive: true });
 	
 	const vFiles = files
-		.filter(file => file.isFile() && !file.name.startsWith("_") && !dirIsIgnored(file.parentPath) && (file.name.endsWith(".ss") || file.name.endsWith(".gml")))
+		.filter(file => file.isFile() && !file.name.startsWith("_") && !dirIsIgnored(file.parentPath) && (file.name.endsWith(".scaff") || file.name.endsWith(".gml")))
 		.map(file => {
 			return {
 				name: file.name,
 				path: normalizePath(resolvePath(file.parentPath)),
-				isScaff: file.name.endsWith(".ss"),
-				isIndex: file.name === "index.ss",
+				isScaff: file.name.endsWith(".scaff"),
+				isIndex: file.name === "index.scaff",
 				toGenerate: false,
 				content: "",
 				childs: []
 			};
 		});
 
-	log.info(`Found \x1b[32m${vFiles.filter(file => file.isScaff).length} \x1b[34m*.ss\x1b[0m file(s) and \x1b[32m${vFiles.filter(file => !file.isScaff).length}\x1b[0m \x1b[34m*.gml\x1b[0m file(s).`);
+	log.info(`Found \x1b[32m${vFiles.filter(file => file.isScaff).length} \x1b[34m*.scaff\x1b[0m file(s) and \x1b[32m${vFiles.filter(file => !file.isScaff).length}\x1b[0m \x1b[34m*.gml\x1b[0m file(s).`);
 	
 	return vFiles;
 }

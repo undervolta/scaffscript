@@ -4,7 +4,7 @@
 
 ScaffScript is a source-to-source compiler and integration tool for a TypeScript-inspired superset of GML. The project focuses on:
 
-1. Scanning `.ss` and `.gml` files from a configured source tree.
+1. Scanning `.scaff` and `.gml` files from a configured source tree.
 2. Resolving ScaffScript-specific language features such as `export`, `import`, `include`, `impl`, special values, and integration blocks.
 3. Generating plain `.gml` output into `.out/`.
 4. Optionally integrating the generated output into a GameMaker project by writing resource files and updating the `.yyp` manifest.

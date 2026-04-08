@@ -25,7 +25,7 @@ export async function readAndSplitFiles(files: ScaffFile[], config: ScaffConfig)
 	for (const file of files) {
 		file.content = (await fsRuntime.readText(`${file.path}/${file.name}`)).replace(/\r\n/g, "\n");
 		file.toGenerate = intgRegex.test(file.content);
-		file.name = file.name.replace(".ss", "");
+		file.name = file.name.replace(".scaff", "");
 
 		if (file.isScaff) {
 			const { content: parsedContent, counter: newCounter } = parseSpecialValues(file, counter);

@@ -2,7 +2,7 @@
 
 ## 1. Generation Inputs
 
-The generation phase operates on files in `fileGroup.generate`, meaning `.ss` files that contain at least one `intg ... to ...` statement.
+The generation phase operates on files in `fileGroup.generate`, meaning `.scaff` files that contain at least one `intg ... to ...` statement.
 
 Before file emission, [`src/generator/extract.ts`](../src/generator/extract.ts) parses:
 
