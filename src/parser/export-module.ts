@@ -6,7 +6,6 @@ import type {
 	ScaffModuleInterface,
 	ScaffModuleType,
 	ScaffModuleClass,
-	ScaffModuleEnum,
 	ScaffModuleRetry
 } from "@types";
 
@@ -192,8 +191,11 @@ export function convertClassMethods(classBody: string): string {
 	const methodRegex = /(\w+)\s*\(([^)]*)\)\s*{([\s\S]*?)}/g;
 
 	return classBody.replace(methodRegex, (match, methodName, params, body) => {
+		// console.log(`params: ${params}`)
 		// Avoid converting if it's part of a function expression like print = function() {
 		if (methodName === 'function' || reservedMethodNames.has(methodName)) return match;
+		else if (params.includes("function")) return match;
+		
 		return `${methodName} = function(${params.replaceAll("?", " = undefined")}) {${body}}`;
 	});
 }

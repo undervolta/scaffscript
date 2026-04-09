@@ -1,5 +1,18 @@
 impl Test {
     static const same_dir = () => {
         var msg = "from same dir";
+        var test(_msg?) {
+            show_debug_message($"{_msg ?? msg}")
+        }
+
+        array_foreach(arr, function(_el, _idx) {
+            show_debug_message($"{_el}, {_idx}")
+        })
+
+        //var new_arr = array_map(arr, (_el, _idx) => _el * 2);
+        //var new_arr = array_map(arr, (_el, _idx) => {
+        //    var res = _el * 2;
+        //    return res;
+        //});
     }
 }

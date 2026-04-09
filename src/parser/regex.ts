@@ -6,6 +6,7 @@ export const implHeaderRegex = /impl\s+(?<name>\w+)\s*\{/g;
 export const fnHeaderRegex = /(function|const|let|var)\s+(?<name>\w+)\s*\((?<params>[^)]*)\)\s*\{/g;
 export const fnParamsRegex = /\((?<params>[^)]*)\)/g;
 export const arrowFnHeaderRegex = /\b(?:(?:const|let|var)\s+)?(?<name>\w+)\s*=\s*(?<params>\([^)]*\)|\w+)\s*=>/g;
+//export const arrowFnHeaderNoDeclRegex = /(?<![\w$])(?<params>\([^()]*\)|[A-Za-z_$][\w$]*)\s*=>\s*(?<singleBody>[^)]*)/g;
 
 export const modControlRegex =
 	/(?<cmd>export|import|include)\s+(?<mod>\*|\{[^}]+\}|[A-Za-z0-9_]+)\s+(?<src>from)\s+(?<path>["'][^"']+["'])\s*;?/g;
