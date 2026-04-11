@@ -51,6 +51,14 @@ export function convertArrowFn(str: string) {
  * @param str String to parse
  * @returns Array of implementation headers
  */
+function isEscapedQuote(str: string, index: number) {
+	let backslashCount = 0;
+	for (let j = index - 1; j >= 0 && str[j] === '\\'; j--) {
+		backslashCount++;
+	}
+	return backslashCount % 2 === 1;
+}
+
 export function parseHeader(str: string, regex: RegExp = implHeaderRegex) {
 	const results = [];
 	let match;
@@ -75,7 +83,7 @@ export function parseHeader(str: string, regex: RegExp = implHeaderRegex) {
 			}
 
 			if (inString) {
-				if (char === stringChar && (i === 0 || str[i - 1] !== '\\')) {
+				if (char === stringChar && !isEscapedQuote(str, i)) {
 					inString = false;
 				}
 			} else {
