@@ -1,7 +1,7 @@
 intg * to "./tests/ScaffScript/scripts/MyFolder/scMyScript"
 
 import * from "./script1"
-import { MyClass } from "./script2"
+import { MyClass, } from "./script2"
 import { Test } from "./class/Test"
 
 #[main -- exclude]
@@ -20,7 +20,7 @@ var my_func = @valueof test_function
 /// won't removed
 show_debug_message($"y = @:y, z = @valueof z, STRING = {@nameof STRING}");
 //include * from "./const"
-include { "alias" } from "./class"
+include { "alias",  } from "./class"
 
 var inst = new MyClass("John", 20);
 inst.print();

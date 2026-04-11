@@ -224,6 +224,8 @@ export function extractIntegrationData(file: ScaffFile, config: ScaffConfig): Sc
 			});
 			
 			for (const target of targetsArr) {
+				if (!target) continue;
+				
 				const targetBlock = blocks.find(b => b.name === target.toLowerCase());
 
 				if (!targetBlock) {

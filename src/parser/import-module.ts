@@ -180,6 +180,8 @@ export async function getModuleUsage(
 							if (targetFile) filePaths.push(targetFile);
 							else if (await fileExists(filePath)) filePaths.push(filePath);
 							else {
+								if (!targetFile) continue;
+
 								if (config.onNotFound === "error") {
 									log.error(
 										`File \x1b[33m${f.slice(1, -1)}\x1b[0m from \x1b[32m${file.path}\x1b[0m not found. Aborting...`,
@@ -219,6 +221,8 @@ export async function getModuleUsage(
 								.map((m) => {
 									const split = m.split(":");
 									const key = split[0]!.trim();
+
+									if (!key) return;
 
 									if (split.length === 1) alias[key] = key;
 									else alias[key] = split[1]!.trim();
