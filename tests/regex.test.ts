@@ -56,6 +56,21 @@ describe("Regex tests", () => {
 		});
 	});
 
+	test("Implementation regex with escaped backslashes", () => {
+		const input = [
+			"impl MyClass {",
+			"\tif (stringCharAt(_this_val, wc_pos - 1) === \"\\\\\") {",
+			"\t\treturn true;",
+			"\t}",
+			"}"
+		].join("\n");
+
+		const impl = parseHeader(input);
+
+		//expect(impl.length).toBe(1);
+		console.log(`impl: ${impl[0]?.body}`)
+	});
+
 	test("Tab regex", () => {
 		const input1T = `function test() {
 	if (true) {
