@@ -373,6 +373,11 @@ export async function implementModules(
 
 						if (include.value.type === "class")
 							toReplace += `${include.value.declaration} {\n${include.value.body}\n}`;
+						else if (include.value.type === "function") {
+							toReplace += include.value.jsdoc 
+								? `${include.value.jsdoc}\n${include.value.parsedStr}\n`
+								: include.value.parsedStr + "\n";
+						}
 						else
 							toReplace += include.value.parsedStr + "\n";
 
@@ -445,9 +450,15 @@ export async function implementModules(
 								tabChar,
 							);
 
-							parsedStr = usedMod?.type !== "class"
-								? usedMod?.parsedStr ?? ""
-								: `${usedMod?.declaration} {\n${usedMod?.body}\n}`;
+							if (usedMod?.type === "class") 
+								parsedStr = `${usedMod?.declaration} {\n${usedMod?.body}\n}`;
+							else if (usedMod?.type === "function") {
+								parsedStr = usedMod.jsdoc 
+									? `${usedMod.jsdoc}\n${usedMod.parsedStr}`
+									: usedMod?.parsedStr ?? "";
+							} 
+							else
+								parsedStr = usedMod?.parsedStr ?? "";
 
 							if (tabCnt > 0) {
 								const tabLevels = getTabLevels(parsedStr, config.tabType).map(

@@ -238,6 +238,7 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 		const filePath = file.isIndex ? file.path : `${file.path}/${file.name}`;
 		const lines = file.content.split('\n');
 		let i = 0;
+		let jsdoc: string | null = null; // Declare outside the loop
 
 		while (i < lines.length) {
 			if (!lines[i]) {
@@ -246,6 +247,23 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 			}
 
 			const line = lines[i]!.trim();
+			
+			// Check for JSDoc comment before export
+			if (lines[i]!.trim().startsWith('/**')) {
+				const jsdocLines = [];
+				let j = i;
+				while (j < lines.length && !lines[j]!.includes('*/')) {
+					jsdocLines.push(lines[j]);
+					j++;
+				}
+				if (j < lines.length) {
+					jsdocLines.push(lines[j]); // Include the closing */
+					jsdoc = jsdocLines.join('\n');
+					i = j + 1; // Skip past the JSDoc comment
+					continue; // Continue to process the next line which should be the export
+				}
+			}
+			
 			if (!line.startsWith('export ')) {
 				i++;
 				continue;
@@ -283,9 +301,11 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 					module[filePath][name] = {
 						name, value: body.slice(1, -1), type: 'function', parsedStr,
 						header: funcCode.slice(0, funcCode.indexOf("{")).trim(),
-						blockValue: insertTabs(1, config.tabType) + body.slice(1, -1)
+						blockValue: insertTabs(1, config.tabType) + body.slice(1, -1),
+						jsdoc
 					};
 
+					jsdoc = null; 	// Reset jsdoc after processing
 					//file.content = file.content.replace(funcCode, "");
 				}
 			} else if (line.startsWith('export class ')) {

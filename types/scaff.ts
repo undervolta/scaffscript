@@ -52,6 +52,7 @@ export type ScaffModuleT = {
 	name: string;
 	value: string;
 	type: string;		// "any" | "string" | "number" | "boolean" | "object" | "method" | "array" | "enum"
+	jsdoc?: string | null;	// JSDoc comment above the export
 };
 
 export type ScaffModuleDefault = {

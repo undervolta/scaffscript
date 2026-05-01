@@ -17,6 +17,10 @@ import { Test } from "./class/Test"
 //@content method
 var my_func = @valueof test_function
 
+@content test_function
+
+//@content test_function2
+
 /// won't removed
 show_debug_message($"y = @:y, z = @valueof z, STRING = {@nameof STRING}");
 //include * from "./const"

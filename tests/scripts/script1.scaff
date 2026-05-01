@@ -3,8 +3,18 @@ export var y = 2;
 export let z = 3;
 export const STRING = "string";
 
+
+/**
+ * @name test_function
+ * @params x string x value to print
+ */
 export function test_function(x?) {
 	show_debug_message($"test from file1, x = {x}, y = {y}, \"{}");
+}
+
+
+export function test_function2() {
+	show_debug_message($"test function 2");
 }
 
 export const method = function(arg1, arg2) {
