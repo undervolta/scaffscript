@@ -2,7 +2,7 @@ export x = 1;
 export var y = 2;
 export let z = 3;
 export const STRING = "string";
-
+export const URL = "https://some-domain.com";
 
 /**
  * @name test_function

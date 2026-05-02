@@ -17,6 +17,8 @@ import { Test } from "./class/Test"
 //@content method
 var my_func = @valueof test_function
 
+//@content URL
+
 @content test_function
 
 //@content test_function2

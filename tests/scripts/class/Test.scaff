@@ -1,3 +1,6 @@
+/**
+ * @desc Test JSDoc on classes
+ */
 export class Test {
 	constructor() 
     

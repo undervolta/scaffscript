@@ -358,7 +358,10 @@ export function getExportedModules(files: ScaffFileGroup, config: ScaffConfig) {
 						name, value: classCode.replace("export ", ""), type: 'class', parsedStr,
 						declaration: `function ${name}(${constructor.replaceAll("?", " = undefined")}) constructor`,
 						body: `${insertTabs(1, config.tabType)}${classBody}`,
+						jsdoc
 					} as ScaffModuleClass;
+
+					jsdoc = null;
 				}
 			} else if (line.startsWith('export interface ')) {
 				// Collect multiline interface
