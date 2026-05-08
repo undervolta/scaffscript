@@ -70,13 +70,14 @@ export function parseHeader(str: string, regex: RegExp = implHeaderRegex) {
 		let braceCount = 1;
 		let inString = false;
 		let stringChar = '';
+		let inBlockComment = false;
 		let i = start;
 
 		for (; i < str.length; i++) {
 			const char = str[i]!;
 
 			// Handle single-line comments
-			if (!inString && char === '/' && str[i + 1] === '/') {
+			if (!inString && !inBlockComment && char === '/' && str[i + 1] === '/') {
 				// Skip until end of line
 				while (i < str.length && str[i] !== '\n') i++;
 				continue;
@@ -86,10 +87,18 @@ export function parseHeader(str: string, regex: RegExp = implHeaderRegex) {
 				if (char === stringChar && !isEscapedQuote(str, i)) {
 					inString = false;
 				}
+			} else if (inBlockComment) {
+				if (char === '*' && i + 1 < str.length && str[i + 1] === '/') {
+					inBlockComment = false;
+					i++; // skip the /
+				}
 			} else {
 				if (char === '"' || char === "'") {
 					inString = true;
 					stringChar = char;
+				} else if (char === '/' && i + 1 < str.length && str[i + 1] === '*') {
+					inBlockComment = true;
+					i++; // skip the *
 				} else if (char === '{') {
 					braceCount++;
 				} else if (char === '}') {

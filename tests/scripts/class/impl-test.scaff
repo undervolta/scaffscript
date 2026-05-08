@@ -1,9 +1,9 @@
 impl Test {
     /**
-     * @name same_dir
+     * @param {any} Param. Example: `123`
      */
-    static const same_dir = () => {
-        var msg = "from same dir";
+    static const same_dir = (_param) => {
+        var msg = "from same dir" + string(_param);
         var test(_msg?) {
             show_debug_message($"{_msg ?? msg}")
         }

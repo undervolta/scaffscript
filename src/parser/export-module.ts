@@ -116,7 +116,7 @@ function getObjectMembers(module: ScaffModuleStore, retryList: ScaffModuleRetry[
 }
 
 /**
- * Count braces in code while ignoring quoted strings and line comments.
+ * Count braces in code while ignoring quoted strings and comments.
  * @param line Line to count braces in
  * @returns Number of braces in the line
  */
@@ -124,6 +124,7 @@ function countBraces(line: string): number {
 	let count = 0;
 	let inString = false;
 	let stringChar = '';
+	let inBlockComment = false;
 
 	for (let i = 0; i < line.length; i++) {
 		const char = line[i];
@@ -132,10 +133,18 @@ function countBraces(line: string): number {
 			if (char === stringChar && (i === 0 || line[i - 1] !== '\\')) {
 				inString = false;
 			}
+		} else if (inBlockComment) {
+			if (char === '*' && i + 1 < line.length && line[i + 1] === '/') {
+				inBlockComment = false;
+				i++; // skip the /
+			}
 		} else {
 			if (char === '"' || char === "'") {
 				inString = true;
 				stringChar = char;
+			} else if (char === '/' && i + 1 < line.length && line[i + 1] === '*') {
+				inBlockComment = true;
+				i++; // skip the *
 			} else if (char === '{') {
 				count++;
 			} else if (char === '}') {

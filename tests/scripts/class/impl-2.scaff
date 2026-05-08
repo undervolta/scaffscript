@@ -1,0 +1,12 @@
+impl Test {
+    /**
+	 * @desc _**(+2 Overloads)**_ Resolve relation(s) in this data with other model's data. _(The intellisense will show this method with the arguments of method with more arguments)_
+	 * @param {string | real | Struct} _resolver _**(1)**_ (Required) Column name. Example: `"name"`. **(2)** (Required) Relation id or relation object (from `.get_relation()` or `.define_relation()`). Example: `1`. **(3)** (Required) Struct with data resolver properties. Example: `{ <column_name>: { with_model: <model> }, ... }`.
+	 * @param {Struct} [_with] _**(1)**_ (Required) Model to resolve relation with. _**(2) (3)**_ (Optional) Options for this operation.
+	 * @param {Struct} [_option] _**(1)**_ (Optional) Options of this operation. Example: `{ write_through: true }`. See the docs for more details.
+	 * @context NimbusDBData
+	 */
+    static const new(_extra) {
+        show_debug_message(_extra);
+    }
+}
