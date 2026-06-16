@@ -4,6 +4,9 @@
 
 A minimal superset language of **GameMaker Language** (GML) for creating module-based GameMaker source codes. This minimal language is mainly used for developing GML libraries, but can also be used for other purposes.
 
+> [!IMPORTANT]
+> This project is archived due to the author quitting the use of GameMaker.
+
 > [!CAUTION]
 > ScaffScript is **not** affiliated with or endorsed by YoYo Games Ltd. GameMaker and GML are trademarks of YoYo Games Ltd. 
 
@@ -26,7 +29,7 @@ A minimal superset language of **GameMaker Language** (GML) for creating module-
 
 ## Installation & Documentation
 
-For more information, please refer to the official [documentation](https://scaffscript.lefinitas.com).
+For more information, please refer to the official [documentation](https://scaffscript-docs.netlify.app/).
 
 ---
 
